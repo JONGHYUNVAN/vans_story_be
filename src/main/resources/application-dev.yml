@@ -1,0 +1,47 @@
+spring:
+  # H2 데이터베이스 웹 콘솔 설정
+  h2:
+    console:
+      enabled: true                # H2 콘솔 활성화
+      path: /h2-console           # 콘솔 접속 경로
+
+  # 데이터베이스 연결 설정
+  datasource:
+    driver-class-name: org.h2.Driver
+    # 파일 기반 H2 데이터베이스 설정
+    # ./data/blogdb 경로에 데이터 파일이 생성됨
+    url: jdbc:h2:file:./data/blogdb
+    username: sa                  # 기본 사용자명
+    password:                     # 기본 비밀번호 (비워둠)
+
+  # JPA 설정
+  jpa:
+    hibernate:
+      # 애플리케이션 시작 시 테이블 자동 생성/수정
+      # create: 매번 테이블 새로 생성
+      # update: 변경사항만 반영
+      # validate: 엔티티와 테이블이 일치하는지 검증만 수행
+      # none: 아무 작업도 하지 않음
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true         # SQL 쿼리 포맷팅
+        show_sql: true          # SQL 쿼리 콘솔 출력
+    database-platform: org.hibernate.dialect.H2Dialect  # H2 데이터베이스 방언 설정
+
+  # JWT 보안 설정
+  security:
+    jwt:
+      secret: dev_jwt_secret_key_here_it_should_be_at_least_256_bits_long  # JWT 시크릿 키
+      token-validity-in-seconds: 86400    # 토큰 유효 기간 (24시간)
+
+# 로깅 설정
+logging:
+  level:
+    org.hibernate.SQL: debug           # SQL 쿼리 로깅
+    org.hibernate.type: trace          # SQL 쿼리 파라미터 로깅
+    com.blog: debug                    # 애플리케이션 로그 레벨
+
+# 서버 설정
+server:
+  port: 8080                          # 개발 서버 포트

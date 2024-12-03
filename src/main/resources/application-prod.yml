@@ -1,0 +1,37 @@
+spring:
+  # 데이터베이스 연결 설정
+  datasource:
+    driver-class-name: org.mariadb.jdbc.Driver
+    # 운영 데이터베이스 연결 정보
+    url: jdbc:mariadb://your-production-db:3306/blog_prod?characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    # 환경 변수에서 데이터베이스 접속 정보를 가져옴 (보안)
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  # JPA 설정
+  jpa:
+    hibernate:
+      # 운영 환경에서는 검증만 수행 (스키마 변경 없음)
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false        # SQL 포맷팅 비활성화
+        show_sql: false         # SQL 로그 출력 비활성화
+    open-in-view: false        # OSIV 비활성화 (성능 향상)
+
+  # JWT 보안 설정
+  security:
+    jwt:
+      secret: ${JWT_SECRET}    # 환경 변수에서 JWT 시크릿 키 가져옴
+      token-validity-in-seconds: 86400
+
+# 로깅 설정 (운영 환경에서는 최소한의 로깅만 수행)
+logging:
+  level:
+    org.hibernate.SQL: info
+    org.hibernate.type: info
+    com.blog: info
+
+# 서버 설정
+server:
+  port: 80    # 운영 서버 포트

@@ -1,0 +1,28 @@
+spring:
+  profiles:
+    # 기본 프로필을 dev로 설정
+    # 별도 설정 없이 애플리케이션 실행 시 개발 환경(dev)으로 실행됨
+    active: dev  
+
+server:
+  servlet:
+    encoding:
+      # 문자 인코딩 설정
+      charset: UTF-8
+      # 인코딩 강제 적용 (항상 설정된 인코딩을 사용)
+      force: true
+
+# Swagger UI 설정
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html              # Swagger UI 경로 설정
+    groups-order: DESC                  # API 그룹 정렬 순서
+    operationsSorter: method            # API 메서드 정렬 기준
+    disable-swagger-default-url: true   # 기본 petstore URL 비활성화
+    display-request-duration: true      # 요청 소요 시간 표시
+  api-docs:
+    path: /api-docs                     # API 문서 JSON 경로
+  show-actuator: true                   # Actuator API 문서화 활성화
+  # API 기본 요청/응답 미디어 타입 설정
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json 
