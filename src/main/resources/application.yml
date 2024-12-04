@@ -26,3 +26,12 @@ springdoc:
   # API 기본 요청/응답 미디어 타입 설정
   default-consumes-media-type: application/json
   default-produces-media-type: application/json 
+
+cors:
+  allowed-origins:
+    - http://localhost:3000
+
+jwt:
+  secret-key: "vadfglkjsdflgkjlsdfkjglsdfjglksdjfglkdsjfglkdjslfkgjdlskfjgldksjfglkdsjflgkjsdlfkgjlsdkfjgldskfjgoeo945u3945"
+  accessTokenValidityInSeconds: 1800  # 30분
+  refreshTokenValidityInSeconds: 604800  # 7일 

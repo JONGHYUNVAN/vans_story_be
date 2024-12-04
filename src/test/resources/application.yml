@@ -1,0 +1,4 @@
+jwt:
+  secret-key: "alskdfjlaskdjlfajksdofaosdfjaoskdjfoasjdfoajsdofjkasodfjoasdjfoaksjdofkjasodf"
+  accessTokenValidityInSeconds: 3600
+  refreshTokenValidityInSeconds: 86400
