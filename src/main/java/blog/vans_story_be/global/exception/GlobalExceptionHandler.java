@@ -1,11 +1,15 @@
 package blog.vans_story_be.global.exception;
 
 import blog.vans_story_be.global.response.ApiResponse;
+
+import java.util.stream.Collectors;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 
 /**
  * 전역 예외 처리를 위한 핸들러 클래스
@@ -30,10 +34,45 @@ public class GlobalExceptionHandler {
                 .internalServerError()
                 .body(ApiResponse.error(e.getMessage()));
     }
+    /**
+     * JSON 파싱/타입 변환 예외를 처리하는 핸들러
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<String>> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
+        return ResponseEntity
+                .badRequest()
+                .body(ApiResponse.error("잘못된 요청 형식입니다. 요청 데이터를 확인해주세요."));
+    }
 
+    /**
+     * CustomException 처리를 위한 핸들러
+     */
+    @ExceptionHandler(CustomException.class)
+    public ResponseEntity<ApiResponse<String>> handleCustomException(CustomException e) {
+        if (e.getMessage().contains("not found")) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(ApiResponse.error(e.getMessage()));
+        }
+        
+        return ResponseEntity
+                .badRequest()
+                .body(ApiResponse.error(e.getMessage()));
+    }
+
+    /**
+     * 검증 실패 예외를 처리하는 핸들러
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ErrorResponse> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        ErrorResponse errorResponse = new ErrorResponse("Validation failed", ex.getBindingResult().toString());
-        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    public ResponseEntity<ApiResponse<String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
+        String errorMessage = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(error -> error.getField() + ": " + error.getDefaultMessage())
+                .collect(Collectors.joining(", "));
+        
+        return ResponseEntity
+                .badRequest()
+                .body(ApiResponse.error(errorMessage));
     }
 } 

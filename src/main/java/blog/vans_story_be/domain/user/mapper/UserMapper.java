@@ -26,6 +26,7 @@ public interface UserMapper extends GenericMapper<UserDto.Response, User> {
     User toEntity(UserDto.Response dto);
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "role", expression = "java(blog.vans_story_be.domain.user.entity.Role.USER)")
     User toEntity(UserDto.CreateRequest createRequest);
 
     @Override

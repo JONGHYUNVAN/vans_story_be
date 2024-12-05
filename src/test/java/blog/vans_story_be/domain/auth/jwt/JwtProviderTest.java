@@ -35,7 +35,7 @@ class JwtProviderTest {
 
     /**
      * Access Token 생성 테스트
-     * 인증 정보로부터 유효한 Access Token이 생성되는지 검증합니다.
+     * 인증 정보로부터 유효한 Access Token이 ���성되는지 검증합니다.
      */
     @Test
     @DisplayName("Access Token 생성 테스트")
@@ -73,7 +73,7 @@ class JwtProviderTest {
 
     /**
      * 토큰에서 인증 정보 추출 테스트
-     * 토큰으로부터 원래의 인증 정보가 올바르게 추출되는지 검증합니다.
+     * 토���으로부터 원래의 인증 정보가 올바르게 추출되는지 검증합니다.
      */
     @Test
     @DisplayName("토큰에서 인증 정보 추출 테스트")
@@ -96,11 +96,6 @@ class JwtProviderTest {
     @DisplayName("시크릿 키 초기화 테스트")
     void initKeyTest() {
         // given
-        String secretKey = jwtProperties.getSecretKey();
-        System.out.println("Loaded Secret Key: " + secretKey);
-        System.out.println("Secret Key Length: " + secretKey.length());
-        System.out.println("Secret Key Bytes Length: " + secretKey.getBytes().length);
-
         assertThat(jwtProperties.getSecretKey()).isNotNull();
 
         // when

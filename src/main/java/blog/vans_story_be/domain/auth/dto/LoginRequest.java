@@ -24,7 +24,7 @@ public class LoginRequest {
      * 로그인에 사용되는 고유한 사용자 식별자입니다.
      */
     @NotBlank(message = "사용자 이름은 필수입니다.")
-    private String username;
+    private String email;
     
     /**
      * 비밀번호

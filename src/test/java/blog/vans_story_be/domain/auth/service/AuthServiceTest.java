@@ -1,10 +1,10 @@
 package blog.vans_story_be.domain.auth.service;
 
 import blog.vans_story_be.domain.auth.dto.LoginRequest;
-import blog.vans_story_be.domain.auth.dto.TokenDto;
 import blog.vans_story_be.domain.auth.entity.RefreshToken;
 import blog.vans_story_be.domain.auth.jwt.JwtProvider;
 import blog.vans_story_be.domain.auth.repository.RefreshTokenRepository;
+import jakarta.servlet.http.Cookie;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -15,6 +15,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.util.Optional;
 
@@ -51,7 +52,7 @@ class AuthServiceTest {
     void loginSuccess() {
         // given
         LoginRequest request = LoginRequest.builder()
-                .username("testuser")
+                .email("testuser@test.com")
                 .password("password")
                 .build();
 
@@ -60,12 +61,14 @@ class AuthServiceTest {
         given(jwtProvider.generateAccessToken(authentication)).willReturn("test.access.token");
         given(jwtProvider.generateRefreshToken(authentication)).willReturn("test.refresh.token");
 
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
         // when
-        TokenDto result = authService.login(request);
+        authService.login(request, response);
 
         // then
-        assertThat(result.getAccessToken()).isEqualTo("test.access.token");
-        assertThat(result.getRefreshToken()).isEqualTo("test.refresh.token");
+        assertThat(response.getHeader("Authorization")).isEqualTo("Bearer test.access.token");
+        assertThat(response.getCookie("refreshToken").getValue()).isEqualTo("test.refresh.token");
         verify(refreshTokenRepository).save(any(RefreshToken.class));
     }
 
@@ -87,11 +90,15 @@ class AuthServiceTest {
         given(jwtProvider.generateAccessToken(authentication)).willReturn("new.access.token");
         given(jwtProvider.generateRefreshToken(authentication)).willReturn("new.refresh.token");
 
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
         // when
-        TokenDto result = authService.refresh(refreshToken);
+        authService.refresh(refreshToken, response);
 
         // then
-        assertThat(result.getAccessToken()).isEqualTo("new.access.token");
-        assertThat(result.getRefreshToken()).isEqualTo("new.refresh.token");
+        assertThat(response.getHeader("Authorization")).isEqualTo("Bearer new.access.token");
+        Cookie refreshTokenCookie = response.getCookie("refreshToken");
+        assertThat(refreshTokenCookie).isNotNull();
+        assertThat(refreshTokenCookie.getValue()).isEqualTo("new.refresh.token");
     }
 } 

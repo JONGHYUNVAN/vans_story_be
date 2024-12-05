@@ -70,20 +70,21 @@ class UserControllerTest {
         createRequest = UserDto.CreateRequest.builder()
                 .username("testUser")
                 .email("test@example.com")
-                .password("password")
-                .role(Role.USER)
+                .password("Password1!")
                 .build();
 
         updateRequest = UserDto.UpdateRequest.builder()
                 .email("updated@example.com")
-                .password("updatedPassword")
+                .password("UpdatedPass1!")
                 .build();
 
         responseDto = UserDto.Response.builder()
                 .id(1L)
                 .username("testUser")
-                .email("test@example.com")
+                .email("updated@example.com")
                 .role(Role.USER)
+                .createdAt("2024-01-01T00:00:00")
+                .updatedAt("2024-01-01T00:00:00")
                 .build();
 
         // JWT 토큰 검증 모의 설정
@@ -141,7 +142,6 @@ class UserControllerTest {
                     .username("testUser")
                     .email("invalid-email")
                     .password("password")
-                    .role(Role.USER)
                     .build();
 
             // when & then
@@ -152,8 +152,7 @@ class UserControllerTest {
                     .andDo(print())
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.success").value(false))
-                    .andExpect(jsonPath("$.error").exists())
-                    .andExpect(jsonPath("$.error.message").exists());
+                    .andExpect(jsonPath("$.message").exists());
         }
     }
 

@@ -22,7 +22,7 @@ spring:
       # update: 변경사항만 반영
       # validate: 엔티티와 테이블이 일치하는지 검증만 수행
       # none: 아무 작업도 하지 않음
-      ddl-auto: update
+      ddl-auto: create-drop
     properties:
       hibernate:
         format_sql: true         # SQL 쿼리 포맷팅

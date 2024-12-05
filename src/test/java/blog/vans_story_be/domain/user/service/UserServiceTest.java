@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Arrays;
 import java.util.List;
@@ -56,6 +57,13 @@ class UserServiceTest {
     @Mock
     private UserMapper userMapper;
 
+    /**
+     * PasswordEncoder의 Mock 객체
+     * 비밀번호 인코딩 로직을 모의합니다.
+     */
+    @Mock
+    private PasswordEncoder passwordEncoder;
+
     private User testUser;
     private UserDto.CreateRequest createRequest;
     private UserDto.UpdateRequest updateRequest;
@@ -77,7 +85,6 @@ class UserServiceTest {
                 .username("newUser")
                 .email("new@example.com")
                 .password("newPassword")
-                .role(Role.USER)
                 .build();
 
         updateRequest = UserDto.UpdateRequest.builder()

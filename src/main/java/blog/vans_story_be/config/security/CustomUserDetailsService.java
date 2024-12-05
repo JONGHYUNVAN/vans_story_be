@@ -28,16 +28,16 @@ public class CustomUserDetailsService implements UserDetailsService {
     private final UserRepository userRepository;
 
     /**
-     * 사용자명으로 사용자의 상세 정보를 조회합니다.
+     * 이메일로 사용자의 상세 정보를 조회합니다.
      *
-     * @param username 조회할 사용자명
+     * @param email 조회할 이메일
      * @return UserDetails 사용자 상세 정보
      * @throws UsernameNotFoundException 사용자를 찾을 수 없는 경우
      */
     @Override
     @Transactional(readOnly = true)
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByUsername(username)
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+        return userRepository.findByEmail(email)
                 .map(this::createUserDetails)
                 .orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다."));
     }
@@ -52,7 +52,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority(user.getRole().name());
 
         return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUsername())
+                .username(user.getEmail())
                 .password(user.getPassword())
                 .authorities(Collections.singleton(authority))
                 .build();

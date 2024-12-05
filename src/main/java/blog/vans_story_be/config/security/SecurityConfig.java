@@ -16,6 +16,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 
 import blog.vans_story_be.domain.auth.jwt.JwtFilter;
 import blog.vans_story_be.domain.auth.jwt.JwtProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 
 
 /**
@@ -33,6 +34,7 @@ public class SecurityConfig {
 
     private final JwtProvider jwtProvider;
     private final CorsConfigurationSource corsConfigurationSource;
+    private final CustomUserDetailsService userDetailsService;
 
     /**
      * 비밀번호 암호화를 위한 BCrypt 인코더를 빈으로 등록합니다.
@@ -72,7 +74,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/auth/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
-                .anyRequest().authenticated())
+                .anyRequest().permitAll())
+            .authenticationProvider(authenticationProvider(userDetailsService, passwordEncoder()))
             .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
             
         return http.build();
@@ -88,5 +91,15 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider(
+            CustomUserDetailsService userDetailsService,
+            PasswordEncoder passwordEncoder) {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(userDetailsService);
+        provider.setPasswordEncoder(passwordEncoder);
+        return provider;
     }
 } 

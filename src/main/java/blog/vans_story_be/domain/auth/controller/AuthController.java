@@ -6,14 +6,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import blog.vans_story_be.domain.auth.dto.TokenDto;
 import blog.vans_story_be.domain.auth.dto.LoginRequest;
 import blog.vans_story_be.domain.auth.service.AuthService;
 import blog.vans_story_be.global.exception.CustomException;
 import blog.vans_story_be.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -38,17 +36,17 @@ public class AuthController {
      *
      * @param request 로그인 요청 정보 (사용자명, 비밀번호)
      * @param response HTTP 응답 객체 (쿠키 설정에 사용)
-     * @return 로그인 성공 시 Access Token이 포함된 응답
+     * @return 로그인 성공 시 Authorization header와 refreshToken 쿠키가 포함된 응답
      * @throws CustomException 인증 실패 시 발생
      */
     @Operation(summary = "로그인", description = "사용자 로그인을 처리합니다.")
     @PostMapping("/login")
-    public ResponseEntity<ApiResponse<TokenDto>> login(
+    public ResponseEntity<ApiResponse<Void>> login(
             @Valid @RequestBody LoginRequest request, 
             HttpServletResponse response) {
-        TokenDto tokenDto = authService.login(request);
-        addRefreshTokenToCookie(response, tokenDto.getRefreshToken());
-        return ResponseEntity.ok(ApiResponse.success(tokenDto));
+        authService.login(request, response);  // HttpServletResponse 전달
+        
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
     /**
@@ -56,27 +54,18 @@ public class AuthController {
      * 쿠키에 저장된 Refresh Token을 검증하여 새로운 Access Token을 발급합니다.
      *
      * @param refreshToken 쿠키에서 추출한 Refresh Token
-     * @return 새로 발급된 Access Token이 포함된 응답
+     * @param response HTTP 응답 객체
+     * @return 성공 응답
      * @throws CustomException 토큰이 유효하지 않거나 만료된 경우 발생
      */
     @Operation(summary = "토큰 갱신", description = "Access Token을 갱신합니다.")
     @PostMapping("/refresh")
-    public ResponseEntity<ApiResponse<TokenDto>> refresh(
-            @CookieValue(name = "refreshToken") String refreshToken) {
-        return ResponseEntity.ok(ApiResponse.success(authService.refresh(refreshToken)));
+    public ResponseEntity<ApiResponse<Void>> refresh(
+            @CookieValue(name = "refreshToken") String refreshToken,
+            HttpServletResponse response) {
+        authService.refresh(refreshToken, response);  // HttpServletResponse 전달
+        
+        return ResponseEntity.ok(ApiResponse.success(null));
     }
 
-    /**
-     * Refresh Token을 HTTP Only 쿠키에 추가합니다.
-     *
-     * @param response HTTP 응답 객체
-     * @param refreshToken 저장할 Refresh Token
-     */
-    private void addRefreshTokenToCookie(HttpServletResponse response, String refreshToken) {
-        Cookie cookie = new Cookie("refreshToken", refreshToken);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(true);  // HTTPS에서만 전송
-        cookie.setPath("/");
-        response.addCookie(cookie);
-    }
 } 

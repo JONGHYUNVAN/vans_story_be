@@ -1,15 +1,16 @@
 package blog.vans_story_be.domain.user.service;
 
 import blog.vans_story_be.domain.user.dto.UserDto;
+import blog.vans_story_be.domain.user.entity.Role;
 import blog.vans_story_be.domain.user.entity.User;
 import blog.vans_story_be.domain.user.mapper.UserMapper;
 import blog.vans_story_be.domain.user.repository.UserRepository;
 import blog.vans_story_be.global.exception.CustomException;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,6 +31,16 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
+    public UserDto.Response createAdmin(UserDto.CreateRequest request) {
+        User user = userMapper.toEntity(request);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole(Role.ADMIN);
+        
+        userRepository.save(user);
+        return userMapper.toDto(user);
+    }
+
+    @Transactional
     public UserDto.Response createUser(UserDto.CreateRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new CustomException("이미 존재하는 사용자명입니다.");
@@ -41,6 +52,7 @@ public class UserService {
 
         User user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setRole(Role.USER);  // 기본 역할을 USER로 설정
         
         userRepository.save(user);
         return userMapper.toDto(user);
@@ -69,7 +81,7 @@ public class UserService {
             user.setEmail(request.getEmail());
         }
         if (request.getPassword() != null) {
-            user.setPassword(request.getPassword());
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
 
         return userMapper.toDto(user);

@@ -1,5 +1,6 @@
 package blog.vans_story_be.domain.auth.service;
 
+import jakarta.servlet.http.Cookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -10,9 +11,9 @@ import org.springframework.transaction.annotation.Transactional;
 import blog.vans_story_be.domain.auth.entity.RefreshToken;
 import blog.vans_story_be.domain.auth.jwt.JwtProvider;
 import blog.vans_story_be.global.exception.CustomException;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import blog.vans_story_be.domain.auth.dto.LoginRequest;
-import blog.vans_story_be.domain.auth.dto.TokenDto;
 import blog.vans_story_be.domain.auth.repository.RefreshTokenRepository;
 
 /**
@@ -34,13 +35,13 @@ public class AuthService {
      * 사용자 로그인을 처리하고 JWT 토큰을 발급합니다.
      *
      * @param request 로그인 요청 정보 (사용자명, 비밀번호)
-     * @return 생성된 Access Token과 Refresh Token
+     * @param response HTTP 응답 객체
      * @throws BadCredentialsException 인증 실패 시 발생
      */
-    public TokenDto login(LoginRequest request) {
+    public void login(LoginRequest request, HttpServletResponse response) {
         // 1. 인증 정보 생성
         UsernamePasswordAuthenticationToken authenticationToken =
-                new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword());
+                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword());
 
         // 2. 실제 검증 (사용자 비밀번호 체크)
         Authentication authentication = authenticationManager.authenticate(authenticationToken);
@@ -52,10 +53,9 @@ public class AuthService {
         // 4. RefreshToken 저장
         saveRefreshToken(authentication.getName(), refreshToken);
 
-        return TokenDto.builder()
-                .accessToken(accessToken)
-                .refreshToken(refreshToken)
-                .build();
+        // 5. 토큰을 응답 헤더와 쿠키에 설정
+        response.setHeader("Authorization", "Bearer " + accessToken);
+        addRefreshTokenToCookie(response, refreshToken);
     }
 
     /**
@@ -65,7 +65,7 @@ public class AuthService {
      * @return 새로 발급된 Access Token과 Refresh Token
      * @throws CustomException 토큰이 유효하지 않거나 사용자 정보가 일치하지 않는 경우 발생
      */
-    public TokenDto refresh(String refreshToken) {
+    public void refresh(String refreshToken, HttpServletResponse response) {
         // 1. Refresh Token 검증
         if (!jwtProvider.validateToken(refreshToken)) {
             throw new CustomException("Refresh Token이 유효하지 않습니다.");
@@ -90,10 +90,9 @@ public class AuthService {
         // 6. 저장소 정보 업데이트
         refreshTokenEntity.updateToken(newRefreshToken);
 
-        return TokenDto.builder()
-                .accessToken(newAccessToken)
-                .refreshToken(newRefreshToken)
-                .build();
+        // 7. 토큰을 응답 헤더와 쿠키에 설정
+        response.setHeader("Authorization", "Bearer " + newAccessToken);
+        addRefreshTokenToCookie(response, newRefreshToken);
     }
 
     /**
@@ -109,5 +108,13 @@ public class AuthService {
                 .orElse(new RefreshToken(username, refreshToken));
 
         refreshTokenRepository.save(refreshTokenEntity);
+    }
+
+    public void addRefreshTokenToCookie(HttpServletResponse response, String refreshToken) {
+        Cookie cookie = new Cookie("refreshToken", refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(true);
+        cookie.setPath("/");
+        response.addCookie(cookie);
     }
 } 
