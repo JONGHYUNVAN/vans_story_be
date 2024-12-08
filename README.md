@@ -1,4 +1,4 @@
-# Vans Story Backend
+# Vans Dev Blog Backend
 
 ## 개발 환경
 ### 버전 정보
@@ -6,7 +6,7 @@
 - Dependency Management: 1.1.4
 - Jakarta Persistence API: 3.1.0
 - Hibernate Core: 6.2.7.Final
-- Java: 23
+- Java: 17
 - Gradle: 8.5
 
 ### 주요 의존성
@@ -140,10 +140,37 @@
 - message: 오류 메시지 (실패 시)
 
 #### 예외 처리
-- `CustomException.java`: 사용자 정의 예외 클래스
-- `GlobalExceptionHandler.java`: 전역 예외 처리기
-  - 모든 예외를 ApiResponse 형식으로 변환
-  - HTTP 500 응답 코드 반환
+- **CustomException**: 비즈니스 로직 관련 사용자 정의 예외
+- **GlobalExceptionHandler**: 전역 예외 처리기
+  - `@RestControllerAdvice`를 사용한 일관된 예외 처리
+  - 모든 예외를 `ApiResponse` 형식으로 변환
+
+#### 처리되는 예외 종류
+1. **일반 예외 (Exception)**
+   - 처리되지 않은 모든 예외를 포괄
+   - HTTP 500 (Internal Server Error) 반환
+
+2. **사용자 정의 예외 (CustomException)**
+   - "not found" 포함 시 HTTP 404 (Not Found)
+   - 그 외의 경우 HTTP 400 (Bad Request)
+
+3. **요청 데이터 파싱 예외 (HttpMessageNotReadableException)**
+   - JSON 파싱 실패 시
+   - HTTP 400 (Bad Request)
+
+4. **유효성 검증 실패 (MethodArgumentNotValidException)**
+   - 요청 데이터 검증(@Valid) 실패 시
+   - 필드별 오류 메시지 포함
+   - HTTP 400 (Bad Request)
+
+#### 응답 형식
+```json
+{
+    "success": false,
+    "data": null,
+    "message": "에러 메시지"
+}
+```
 
 #### 기본 엔티티 (`BaseEntity.java`)
 모든 엔티티의 기본 클래스로 다음 필드 포함:
@@ -155,4 +182,75 @@
 ### 프로필 설정
 - 기본적으로 `dev` 프로필이 활성화되어 있습니다.
 - 프로필별로 다른 설정을 적용할 수 있습니다 (`application-{profile}.yml`).
+
+## Spring Security 구현
+
+### 인증 아키텍처
+#### JWT 기반 인증
+- Access Token과 Refresh Token 사용
+- Access Token: Authorization 헤더로 전달 (Bearer 방식)
+- Refresh Token: HTTP Only 쿠키로 안전하게 저장
+- 토큰 유효 기간
+  - Access Token: 30분
+  - Refresh Token: 7일
+
+#### 주요 컴포넌트
+1. **SecurityConfig**
+   - Spring Security 기본 설정
+   - CSRF 보호 비활성화 (JWT 사용으로 인한)
+   - 세션 관리: STATELESS
+   - CORS 설정
+   - 공개 엔드포인트:
+     - `/api/v1/auth/**`
+     - `/swagger-ui/**`
+     - `/v3/api-docs/**`
+
+2. **JwtProvider**
+   - JWT 토큰 생성 및 검증
+   - 사용자 인증 정보 추출
+   - 토큰 유효성 검사
+
+3. **JwtFilter**
+   - 모든 요청에 대한 JWT 검증
+   - Authorization 헤더에서 토큰 추출
+   - 유효한 토큰의 경우 SecurityContext에 인증 정보 설정
+
+4. **CustomUserDetailsService**
+   - 사용자 인증 정보 로드
+   - 데이터베이스에서 사용자 정보 조회
+   - UserDetails 객체 생성
+
+### 인증 프로세스
+1. **로그인 (/api/v1/auth/login)**
+   ```json
+   {
+     "email": "user@example.com",
+     "password": "password"
+   }
+   ```
+   - 응답:
+     - Access Token: Authorization 헤더
+     - Refresh Token: HTTP Only 쿠키
+
+2. **토큰 갱신 (/api/v1/auth/refresh)**
+   - Refresh Token 쿠키 검증
+   - 새로운 Access Token 발급
+   - 선택적으로 Refresh Token 재발급
+
+### 사용자 권한
+- **역할 기반 접근 제어 (RBAC)**
+  - USER: 기본 사용자 권한
+  - ADMIN: 관리자 권한
+
+### 보안 설정
+- 비밀번호 암호화: BCrypt 알고리즘 사용
+- JWT 서명: HS256 알고리즘
+- 환경별 설정:
+  - 개발: 테스트용 시크릿 키
+  - 운영: 환경 변수에서 시크릿 키 로드
+
+### CORS 설정
+- 허용된 출처: `http://localhost:3000`
+- 허용된 메서드: GET, POST, PUT, DELETE, OPTIONS
+- 인증 헤더 허용
 

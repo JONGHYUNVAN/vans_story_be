@@ -62,7 +62,7 @@ public class AuthService {
      * Refresh Token을 검증하고 새로운 토큰을 발급합니다.
      *
      * @param refreshToken 갱신에 사용할 Refresh Token
-     * @return 새로 발급된 Access Token과 Refresh Token
+     * @param response 새로 발급된 Access Token과 Refresh Token
      * @throws CustomException 토큰이 유효하지 않거나 사용자 정보가 일치하지 않는 경우 발생
      */
     public void refresh(String refreshToken, HttpServletResponse response) {

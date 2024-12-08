@@ -23,18 +23,57 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 
     private final JPAQueryFactory queryFactory;
 
+    /**
+     * 모든 사용자를 조회합니다.
+     * Generated SQL:
+     * <pre>
+     * SELECT 
+     *     user.id         AS user_id,
+     *     user.username   AS user_username,
+     *     user.email      AS user_email,
+     *     user.password   AS user_password,
+     *     user.role       AS user_role,
+     *     user.created_at AS user_created_at,
+     *     user.updated_at AS user_updated_at
+     * FROM 
+     *     users user
+     * </pre>
+     */
     @Override
     public List<User> findAllUsers() {
         QUser user = QUser.user;
-        return queryFactory.selectFrom(user).fetch();
+        return 
+        queryFactory
+            .selectFrom(user)
+            .fetch();
     }
 
+    /**
+     * 사용자 ID로 사용자를 조회합니다.
+     * Generated SQL:
+     * <pre>
+     * SELECT 
+     *     user.id         AS user_id,
+     *     user.username   AS user_username,
+     *     user.email      AS user_email,
+     *     user.password   AS user_password,
+     *     user.role       AS user_role,
+     *     user.created_at AS user_created_at,
+     *     user.updated_at AS user_updated_at
+     * FROM 
+     *     users user
+     * WHERE 
+     *     user.id = ?
+     * </pre>
+     */
     @Override
     public Optional<User> findUserById(Long id) {
         QUser user = QUser.user;
-        User foundUser = queryFactory.selectFrom(user)
-                .where(user.id.eq(id))
-                .fetchOne();
+        User foundUser = 
+        queryFactory
+            .selectFrom(user)
+            .where(user.id.eq(id))
+            .fetchOne();
         return Optional.ofNullable(foundUser);
     }
 } 

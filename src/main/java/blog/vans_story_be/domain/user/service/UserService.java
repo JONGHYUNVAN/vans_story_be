@@ -30,6 +30,12 @@ public class UserService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
 
+    /**
+     * 관리자 계정을 생성합니다.
+     * 
+     * @param request {@link UserDto.CreateRequest} 사용자 생성 요청 정보
+     * @return {@link UserDto.Response} 생성된 관리자 정보
+     */
     @Transactional
     public UserDto.Response createAdmin(UserDto.CreateRequest request) {
         User user = userMapper.toEntity(request);
@@ -40,6 +46,13 @@ public class UserService {
         return userMapper.toDto(user);
     }
 
+    /**
+     * 일반 사용자 계정을 생성합니다.
+     * 
+     * @param request {@link UserDto.CreateRequest} 사용자 생성 요청 정보
+     * @return {@link UserDto.Response} 생성된 사용자 정보
+     * @throws CustomException 사용자명 또는 이메일이 이미 존재하는 경우
+     */
     @Transactional
     public UserDto.Response createUser(UserDto.CreateRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
@@ -58,6 +71,12 @@ public class UserService {
         return userMapper.toDto(user);
     }
 
+    /**
+     * 모든 사용자 정보를 조회합니다.
+     * 
+     * @return {@code List<UserDto.Response>} 사용자 목록
+     * @see UserRepository#findAllUsers()
+     */
     @Transactional(readOnly = true)
     public List<UserDto.Response> getAllUsers() {
         return userRepository.findAllUsers().stream()
@@ -65,6 +84,14 @@ public class UserService {
                 .collect(Collectors.toList());
     }
 
+    /**
+     * ID로 사용자를 조회합니다.
+     * 
+     * @param id 사용자 ID
+     * @return {@link UserDto.Response} 조회된 사용자 정보
+     * @throws CustomException 사용자를 찾을 수 없는 경우
+     * @see UserRepository#findUserById(Long)
+     */
     @Transactional(readOnly = true)
     public UserDto.Response getUserById(Long id) {
         User user = userRepository.findUserById(id)
@@ -72,6 +99,15 @@ public class UserService {
         return userMapper.toDto(user);
     }
 
+    /**
+     * 사용자 정보를 수정합니다.
+     * 
+     * @param id 수정할 사용자 ID
+     * @param request {@link UserDto.UpdateRequest} 수정할 사용자 정보
+     * @return {@link UserDto.Response} 수정된 사용자 정보
+     * @throws CustomException 사용자를 찾을 수 없는 경우
+     * @see UserRepository#findUserById(Long)
+     */
     @Transactional
     public UserDto.Response updateUser(Long id, UserDto.UpdateRequest request) {
         User user = userRepository.findUserById(id)
@@ -87,10 +123,26 @@ public class UserService {
         return userMapper.toDto(user);
     }
 
+    /**
+     * 사용자를 삭제합니다.
+     * 
+     * @param id 삭제할 사용자 ID
+     * @throws CustomException 사용자를 찾을 수 없는 경우
+     */
     @Transactional
     public void deleteUser(Long id) {
         User user = userRepository.findUserById(id)
                 .orElseThrow(() -> new CustomException("User not found"));
         userRepository.delete(user);
+    }
+
+    /**
+     * 사용자명 존재 여부를 확인합니다.
+     * 
+     * @param username 확인할 사용자명
+     * @return boolean 사용자명 존재 여부
+     */
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
     }
 } 

@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * 로그인 요청 정보를 담는 DTO 클래스
@@ -18,18 +19,31 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "로그인 요청 DTO")
 public class LoginRequest {
     /**
-     * 사용자 이름
-     * 로그인에 사용되는 고유한 사용자 식별자입니다.
+     * 이메일 형식의 로그인 아이디
+     * @validation 공백 불가
+     * @format example@domain.com
      */
+    @Schema(
+        description = "이메일 형식의 로그인 아이디",
+        example = "user@example.com",
+        requiredMode = Schema.RequiredMode.REQUIRED
+    )
     @NotBlank(message = "사용자 이름은 필수입니다.")
     private String email;
     
     /**
-     * 비밀번호
-     * 사용자 인증에 사용되는 비밀번호입니다.
+     * 사용자 비밀번호
+     * @validation 공백 불가
+     * @format 8자 이상, 영문/숫자/특수문자 조합
      */
+    @Schema(
+        description = "사용자 비밀번호 (8자 이상, 영문/숫자/특수문자 조합)",
+        example = "Password1!",
+        requiredMode = Schema.RequiredMode.REQUIRED
+    )
     @NotBlank(message = "비밀번호는 필수입니다.")
     private String password;
 } 

@@ -35,7 +35,16 @@ class JwtProviderTest {
 
     /**
      * Access Token 생성 테스트
-     * 인증 정보로부터 유효한 Access Token이 ���성되는지 검증합니다.
+     * 인증 정보로부터 유효한 Access Token이 생성되는지 검증합니다.
+     * 
+     * @throws Exception 토큰 생성 중 예외 발생 시
+     * @requires <pre>
+     *    Authentication(username: "testuser", authorities: "ROLE_USER")
+     * </pre>
+     * @returns <pre>
+     *    유효한 JWT 토큰
+     *    토큰 검증 결과: true
+     * </pre>
      */
     @Test
     @DisplayName("Access Token 생성 테스트")
@@ -55,6 +64,15 @@ class JwtProviderTest {
     /**
      * 토큰 검증 테스트
      * 생성된 토큰이 올바르게 검증되는지 확인합니다.
+     * 
+     * @throws Exception 토큰 검증 중 예외 발생 시
+     * @requires <pre>
+     *    Authentication(username: "testuser", authorities: "ROLE_USER")
+     *    생성된 유효한 JWT 토큰
+     * </pre>
+     * @returns <pre>
+     *    토큰 검증 결과: true
+     * </pre>
      */
     @Test
     @DisplayName("토큰 검증 테스트")
@@ -73,7 +91,18 @@ class JwtProviderTest {
 
     /**
      * 토큰에서 인증 정보 추출 테스트
-     * 토���으로부터 원래의 인증 정보가 올바르게 추출되는지 검증합니다.
+     * 토큰으로부터 원래의 인증 정보가 올바르게 추출되는지 검증합니다.
+     * 
+     * @throws Exception 토큰 처리 중 예외 발생 시
+     * @requires <pre>
+     *    Authentication(username: "testuser", authorities: "ROLE_USER")
+     *    생성된 유효한 JWT 토큰
+     * </pre>
+     * @returns <pre>
+     *    추출된 Authentication 객체
+     *    username: "testuser"
+     *    authorities: "ROLE_USER"
+     * </pre>
      */
     @Test
     @DisplayName("토큰에서 인증 정보 추출 테스트")
@@ -92,6 +121,18 @@ class JwtProviderTest {
                 .isEqualTo(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
+    /**
+     * 시크릿 키 초기화 테스트
+     * 
+     * @throws Exception 키 초기화 중 예외 발생 시
+     * @requires <pre>
+     *    설정된 secretKey 값
+     * </pre>
+     * @returns <pre>
+     *    초기화된 secretKey
+     *    생성된 토큰의 유효성: true
+     * </pre>
+     */
     @Test
     @DisplayName("시크릿 키 초기화 테스트")
     void initKeyTest() {

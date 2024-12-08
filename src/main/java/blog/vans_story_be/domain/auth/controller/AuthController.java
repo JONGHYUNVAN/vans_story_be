@@ -44,7 +44,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> login(
             @Valid @RequestBody LoginRequest request, 
             HttpServletResponse response) {
-        authService.login(request, response);  // HttpServletResponse 전달
+        authService.login(request, response);
         
         return ResponseEntity.ok(ApiResponse.success(null));
     }
@@ -63,7 +63,7 @@ public class AuthController {
     public ResponseEntity<ApiResponse<Void>> refresh(
             @CookieValue(name = "refreshToken") String refreshToken,
             HttpServletResponse response) {
-        authService.refresh(refreshToken, response);  // HttpServletResponse 전달
+        authService.refresh(refreshToken, response);
         
         return ResponseEntity.ok(ApiResponse.success(null));
     }

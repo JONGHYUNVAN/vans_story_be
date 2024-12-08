@@ -27,11 +27,8 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verify;
 
 /**
- * UserService 테스트 클래스
+ * UserService 테스트
  * 사용자 관련 비즈니스 로직을 테스트합니다.
- *
- * @see UserService
- * @see MockitoExtension
  */
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
@@ -109,19 +106,27 @@ class UserServiceTest {
     @Nested
     @DisplayName("createUser 메소드는")
     class CreateUser {
-
         /**
-         * 유효한 요청으로 사용자를 성공적으로 생성할 수 있는지 테스트합니다.
-         * 생성된 사용자의 ID와 사용자명이 예상값과 일치하는지 확인합니다.
-         *
-         * @throws Exception 테스트 실행 중 발생할 수 있는 예외
+         * 사용자 생성 성공 테스트
          * 
-         * @see UserDto.CreateRequest
-         * @see UserDto.Response
+         * @throws Exception 테스트 실행 중 예외 발생 시
+         * @requires <pre>
+         *    CreateRequest:
+         *      username: "newUser"
+         *      email: "new@example.com"
+         *      password: "newPassword"
+         * </pre>
+         * @returns <pre>
+         *    Response:
+         *      id: 1
+         *      username: "testUser"
+         *      email: "test@example.com"
+         *      role: ROLE_USER
+         * </pre>
          */
         @Test
         @DisplayName("올바른 요청으로 사용자를 생성할 수 있다")
-        void createUser_WithValidRequest_ShouldCreateUser() throws Exception {
+        void createUser_Success() throws Exception {
             // given
             given(userMapper.toEntity(createRequest)).willReturn(testUser);
             given(userRepository.save(any(User.class))).willReturn(testUser);
@@ -147,18 +152,24 @@ class UserServiceTest {
     @Nested
     @DisplayName("getUserById 메소드는")
     class GetUserById {
-
         /**
-         * 존재하는 ID로 사용자를 성공적으로 조회할 수 있는지 테스트합니다.
-         * 조회된 사용자의 ID가 예상값과 일치하는지 확인합니다.
-         *
-         * @throws Exception 테스트 실행 중 발생할 수 있는 예외
+         * 사용자 조회 성공 테스트
          * 
-         * @see UserDto.Response
+         * @throws Exception 테스트 실행 중 예외 발생 시
+         * @requires <pre>
+         *    userId: 1
+         * </pre>
+         * @returns <pre>
+         *    Response:
+         *      id: 1
+         *      username: "testUser"
+         *      email: "test@example.com"
+         *      role: ROLE_USER
+         * </pre>
          */
         @Test
         @DisplayName("존재하는 ID로 사용자를 조회할 수 있다")
-        void getUserById_WithExistingId_ShouldReturnUser() throws Exception {
+        void getUserById_Success() throws Exception {
             // given
             given(userRepository.findUserById(1L)).willReturn(Optional.of(testUser));
             given(userMapper.toDto(testUser)).willReturn(responseDto);
@@ -172,16 +183,17 @@ class UserServiceTest {
         }
 
         /**
-         * 존재하지 않는 ID로 사용자 조회 시 예외가 발생하는지 테스트합니다.
-         * CustomException이 발생하고 적절한 에러 메시지가 포함되어 있는지 확인합니다.
-         *
-         * @throws Exception 테스트 실행 중 발생할 수 있는 예외
+         * 존재하지 않는 사용자 조회 실패 테스트
          * 
-         * @see CustomException
+         * @throws Exception 테스트 실행 중 예외 발생 시
+         * @requires <pre>
+         *    userId: 99
+         * </pre>
+         * @returns CustomException("User not found")
          */
         @Test
         @DisplayName("존재하지 않는 ID로 조회시 예외가 발생한다")
-        void getUserById_WithNonExistingId_ShouldThrowException() throws Exception {
+        void getUserById_NotFound() throws Exception {
             // given
             given(userRepository.findUserById(99L)).willReturn(Optional.empty());
 
@@ -201,18 +213,24 @@ class UserServiceTest {
     @Nested
     @DisplayName("getAllUsers 메소드는")
     class GetAllUsers {
-
         /**
-         * 모든 사용자 목록을 성공적으로 조회할 수 있는지 테스트합니다.
-         * 조회된 사용자 목록의 크기와 각 사용자의 ID가 예상값과 일치하는지 확인합니다.
-         *
-         * @throws Exception 테스트 실행 중 발생할 수 있는 예외
+         * 전체 사용자 목록 조회 테스트
          * 
-         * @see UserDto.Response
+         * @throws Exception 테스트 실행 중 예외 발생 시
+         * @requires <pre>
+         *    없음
+         * </pre>
+         * @returns <pre>
+         *    List<Response>:
+         *      - id: 1
+         *        username: "testUser"
+         *        email: "test@example.com"
+         *        role: ROLE_USER
+         * </pre>
          */
         @Test
         @DisplayName("모든 사용자 목록을 조회할 수 있다")
-        void getAllUsers_ShouldReturnAllUsers() throws Exception {
+        void getAllUsers_Success() throws Exception {
             // given
             List<User> users = Arrays.asList(testUser);
             given(userRepository.findAllUsers()).willReturn(users);
@@ -237,19 +255,27 @@ class UserServiceTest {
     @Nested
     @DisplayName("updateUser 메소드는")
     class UpdateUser {
-
         /**
-         * 존재하는 사용자의 정보를 성공적으로 수정할 수 있는지 테스트합니다.
-         * 수정된 사용자의 정보가 예상값과 일치하는지 확인합니다.
-         *
-         * @throws Exception 테스트 실행 중 발생할 수 있는 예외
+         * 사용자 정보 수정 성공 테스트
          * 
-         * @see UserDto.UpdateRequest
-         * @see UserDto.Response
+         * @throws Exception 테스트 실행 중 예외 발생 시
+         * @requires <pre>
+         *    userId: 1
+         *    UpdateRequest:
+         *      email: "updated@example.com"
+         *      password: "updatedPassword"
+         * </pre>
+         * @returns <pre>
+         *    Response:
+         *      id: 1
+         *      username: "testUser"
+         *      email: "updated@example.com"
+         *      role: ROLE_USER
+         * </pre>
          */
         @Test
         @DisplayName("존재하는 사용자의 정보를 수정할 수 있다")
-        void updateUser_WithValidRequest_ShouldUpdateUser() throws Exception {
+        void updateUser_Success() throws Exception {
             // given
             given(userRepository.findUserById(1L)).willReturn(Optional.of(testUser));
             given(userMapper.toDto(testUser)).willReturn(responseDto);
@@ -263,16 +289,20 @@ class UserServiceTest {
         }
 
         /**
-         * 존재하지 않는 사용자 수정 시 예외가 발생하는지 테스트합니다.
-         * CustomException이 발생하고 적절한 에러 메시지가 포함되어 있는지 확인합니다.
-         *
-         * @throws Exception 테스트 실행 중 발생할 수 있는 예외
+         * 존재하지 않는 사용자 수정 실패 테스트
          * 
-         * @see CustomException
+         * @throws Exception 테스트 실행 중 예외 발생 시
+         * @requires <pre>
+         *    userId: 99
+         *    UpdateRequest:
+         *      email: "updated@example.com"
+         *      password: "updatedPassword"
+         * </pre>
+         * @returns CustomException("User not found")
          */
         @Test
         @DisplayName("존재하지 않는 사용자 수정 시 예외가 발생한다")
-        void updateUser_WithNonExistingId_ShouldThrowException() throws Exception {
+        void updateUser_NotFound() throws Exception {
             // given
             given(userRepository.findUserById(99L)).willReturn(Optional.empty());
 
@@ -292,18 +322,18 @@ class UserServiceTest {
     @Nested
     @DisplayName("deleteUser 메소드는")
     class DeleteUser {
-
         /**
-         * 존재하는 사용자를 성공적으로 삭제할 수 있는지 테스트합니다.
-         * 삭제된 사용자의 데이터가 정상적으로 삭제되었는지 확인합니다.
-         *
-         * @throws Exception 테스트 실행 중 발생할 수 있는 예외
+         * 사용자 삭제 성공 테스트
          * 
-         * @see UserRepository#delete(User)
+         * @throws Exception 테스트 실행 중 예외 발생 시
+         * @requires <pre>
+         *    userId: 1
+         * </pre>
+         * @returns void
          */
         @Test
         @DisplayName("존재하는 사용자를 삭제할 수 있다")
-        void deleteUser_WithExistingId_ShouldDeleteUser() throws Exception {
+        void deleteUser_Success() throws Exception {
             // given
             given(userRepository.findUserById(1L)).willReturn(Optional.of(testUser));
 
@@ -315,16 +345,17 @@ class UserServiceTest {
         }
 
         /**
-         * 존재하지 않는 사용자 삭제 시 예외가 발생하는지 테스트합니다.
-         * CustomException이 발생하고 적절한 에러 메시지가 포함되어 있는지 확인합니다.
-         *
-         * @throws Exception 테스트 실행 중 발생할 수 있는 예외
+         * 존재하지 않는 사용자 삭제 실패 테스트
          * 
-         * @see CustomException
+         * @throws Exception 테스트 실행 중 예외 발생 시
+         * @requires <pre>
+         *    userId: 99
+         * </pre>
+         * @returns CustomException("User not found")
          */
         @Test
         @DisplayName("존재하지 않는 사용자 삭제 시 예외가 발생한다")
-        void deleteUser_WithNonExistingId_ShouldThrowException() throws Exception {
+        void deleteUser_NotFound() throws Exception {
             // given
             given(userRepository.findUserById(99L)).willReturn(Optional.empty());
 

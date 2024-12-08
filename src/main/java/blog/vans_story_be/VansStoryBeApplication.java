@@ -18,7 +18,7 @@ public class VansStoryBeApplication {
      * 애플리케이션의 메인 메서드
      * Spring Boot 애플리케이션을 실행합니다.
      *
-     * @param args 커맨드 라인 인자
+     * @start f5
      */
     public static void main(String[] args) {
         SpringApplication.run(VansStoryBeApplication.class, args);

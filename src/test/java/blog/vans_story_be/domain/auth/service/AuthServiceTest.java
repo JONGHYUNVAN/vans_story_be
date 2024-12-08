@@ -27,6 +27,10 @@ import static org.mockito.Mockito.verify;
 /**
  * AuthService 테스트 클래스
  * 인증 관련 비즈니스 로직을 테스트합니다.
+ * 
+ * @ExtendWith(MockitoExtension.class) Mockito를 사용하여 목 객체를 주입하고 관리
+ * @InjectMocks 테스트 대상인 AuthService에 목 객체들을 자동 주입
+ * @Mock 각 의존성을 목 객체로 대체
  */
 @ExtendWith(MockitoExtension.class)
 class AuthServiceTest {
@@ -42,11 +46,22 @@ class AuthServiceTest {
 
     @Mock
     private RefreshTokenRepository refreshTokenRepository;
-
     /**
      * 로그인 성공 테스트
      * 인증 성공 시 토큰이 정상적으로 발급되는지 검증합니다.
+     * 
+     * @throws Exception 인증 처리 중 예외 발생 시
+     * @requires <pre>
+     *    LoginRequest(email: "testuser@test.com", password: "password")
+     *    MockHttpServletResponse
+     * </pre>
+     * @returns <pre>
+     *    Authorization 헤더: "Bearer test.access.token"
+     *    refreshToken 쿠키: "test.refresh.token"
+     *    RefreshToken 엔티티가 저장소에 저장됨
+     * </pre>
      */
+    @SuppressWarnings("null")
     @Test
     @DisplayName("로그인 성공 테스트")
     void loginSuccess() {
@@ -75,7 +90,18 @@ class AuthServiceTest {
     /**
      * 토큰 갱신 성공 테스트
      * Refresh Token을 통한 Access Token 갱신이 정상적으로 동작하는지 검증합니다.
+     * 
+     * @throws Exception 토큰 갱신 중 예외 발생 시
+     * @requires <pre>
+     *    refreshToken: "valid.refresh.token"
+     *    MockHttpServletResponse
+     * </pre>
+     * @returns <pre>
+     *    Authorization 헤더: "Bearer new.access.token"
+     *    refreshToken 쿠키: "new.refresh.token"
+     * </pre>
      */
+    @SuppressWarnings("null")
     @Test
     @DisplayName("토큰 갱신 성공 테스트")
     void refreshTokenSuccess() {
