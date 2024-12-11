@@ -55,7 +55,7 @@ public class UserService {
      */
     @Transactional
     public UserDto.Response createUser(UserDto.CreateRequest request) {
-        if (userRepository.existsByUsername(request.getUsername())) {
+        if (userRepository.existsByName(request.getName())) {
             throw new CustomException("이미 존재하는 사용자명입니다.");
         }
 
@@ -142,7 +142,7 @@ public class UserService {
      * @param username 확인할 사용자명
      * @return boolean 사용자명 존재 여부
      */
-    public boolean existsByUsername(String username) {
-        return userRepository.existsByUsername(username);
+    public boolean existsByName(String name) {
+        return userRepository.existsByName(name);
     }
 } 

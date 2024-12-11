@@ -73,13 +73,13 @@ class UserServiceTest {
     void setUp() {
         testUser = new User();
         testUser.setId(1L);
-        testUser.setUsername("testUser");
+        testUser.setName("testUser");
         testUser.setEmail("test@example.com");
         testUser.setPassword("password");
         testUser.setRole(Role.USER);
 
         createRequest = UserDto.CreateRequest.builder()
-                .username("newUser")
+                .name("newUser")
                 .email("new@example.com")
                 .password("newPassword")
                 .build();
@@ -91,7 +91,7 @@ class UserServiceTest {
 
         responseDto = UserDto.Response.builder()
                 .id(1L)
-                .username("testUser")
+                .name("testUser")
                 .email("test@example.com")
                 .role(Role.USER)
                 .build();
@@ -138,7 +138,7 @@ class UserServiceTest {
             // then
             assertThat(result).isNotNull();
             assertThat(result.getId()).isEqualTo(testUser.getId());
-            assertThat(result.getUsername()).isEqualTo(testUser.getUsername());
+            assertThat(result.getName()).isEqualTo(testUser.getName());
             verify(userRepository).save(any(User.class));
         }
     }

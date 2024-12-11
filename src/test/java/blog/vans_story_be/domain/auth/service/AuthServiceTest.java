@@ -17,6 +17,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.mock.web.MockHttpServletResponse;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -112,7 +113,7 @@ class AuthServiceTest {
         given(jwtProvider.validateToken(refreshToken)).willReturn(true);
         given(jwtProvider.getAuthentication(refreshToken)).willReturn(authentication);
         given(refreshTokenRepository.findByUsername("testuser"))
-                .willReturn(Optional.of(new RefreshToken("testuser", refreshToken)));
+                .willReturn(Optional.of(new RefreshToken("testuser", refreshToken,LocalDateTime.now().plusDays(7))));
         given(jwtProvider.generateAccessToken(authentication)).willReturn("new.access.token");
         given(jwtProvider.generateRefreshToken(authentication)).willReturn("new.refresh.token");
 

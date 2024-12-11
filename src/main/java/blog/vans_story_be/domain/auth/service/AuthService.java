@@ -1,6 +1,9 @@
 package blog.vans_story_be.domain.auth.service;
 
 import jakarta.servlet.http.Cookie;
+
+import java.time.LocalDateTime;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -88,7 +91,7 @@ public class AuthService {
         String newRefreshToken = jwtProvider.generateRefreshToken(authentication);
 
         // 6. 저장소 정보 업데이트
-        refreshTokenEntity.updateToken(newRefreshToken);
+        refreshTokenEntity.updateToken(newRefreshToken,LocalDateTime.now().plusDays(7));
 
         // 7. 토큰을 응답 헤더와 쿠키에 설정
         response.setHeader("Authorization", "Bearer " + newAccessToken);
@@ -104,8 +107,8 @@ public class AuthService {
      */
     private void saveRefreshToken(String username, String refreshToken) {
         RefreshToken refreshTokenEntity = refreshTokenRepository.findByUsername(username)
-                .map(entity -> entity.updateToken(refreshToken))
-                .orElse(new RefreshToken(username, refreshToken));
+        .map(entity -> entity.updateToken(refreshToken, LocalDateTime.now().plusDays(7))) // 만료 날짜 추가
+        .orElseGet(() -> new RefreshToken(username, refreshToken, LocalDateTime.now().plusDays(7)));
 
         refreshTokenRepository.save(refreshTokenEntity);
     }

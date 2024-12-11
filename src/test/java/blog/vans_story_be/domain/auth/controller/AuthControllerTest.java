@@ -21,6 +21,9 @@ import jakarta.servlet.http.Cookie;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import java.util.UUID;
+
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 /**
  * AuthController 통합 테스트 클래스
@@ -46,6 +49,9 @@ class AuthControllerTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    private String testUserEmail;
+    private String testUserName;
     /**
      * 각 테스트 실행 전 설정을 수행합니다.
      * 테스트용 사용자 데이터를 데이터베이스에 생성합니다.
@@ -54,11 +60,15 @@ class AuthControllerTest {
      */
     @BeforeEach
     void setUp() {
-        // 테스트용 사용자 생성
+        // 각 테스트마다 고유한 사용자 생성
+        String uniqueId = UUID.randomUUID().toString().substring(0, 8);
+        testUserEmail = "testuser_" + uniqueId + "@example.com";
+        testUserName = "testuser_" + uniqueId;
+        
         User testUser = User.builder()
-                .email("testuser@example.com")
+                .email(testUserEmail)
                 .password(passwordEncoder.encode("password"))
-                .username("testuser")
+                .name(testUserName)
                 .role(Role.USER)
                 .build();
         userRepository.save(testUser);
@@ -83,7 +93,7 @@ class AuthControllerTest {
     void loginSuccess() throws Exception {
         // given
         LoginRequest request = LoginRequest.builder()
-                .email("testuser@example.com")
+                .email(testUserEmail)
                 .password("password")
                 .build();
 
@@ -116,9 +126,8 @@ class AuthControllerTest {
     @DisplayName("토큰 갱신 성공 테스트")
     void refreshTokenSuccess() throws Exception {
         // given
-        // 먼저 로그인하여 유효한 refreshToken을 얻습니다
         LoginRequest request = LoginRequest.builder()
-                .email("testuser@example.com")
+                .email(testUserEmail)
                 .password("password")
                 .build();
 

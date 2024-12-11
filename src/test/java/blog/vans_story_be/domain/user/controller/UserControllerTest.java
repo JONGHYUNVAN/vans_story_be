@@ -70,7 +70,7 @@ class UserControllerTest {
     void setUp() {
         // 테스트 사용자 생성
         testUser = userRepository.save(User.builder()
-                .username("testUser")
+                .name("testUser")
                 .email("test@example.com")
                 .password(passwordEncoder.encode("Password1!"))
                 .role(Role.USER)
@@ -78,7 +78,7 @@ class UserControllerTest {
 
         // 실제 JWT 토큰 발급
         Authentication auth = new UsernamePasswordAuthenticationToken(
-                testUser.getUsername(),
+                testUser.getName(),
                 null,
                 Collections.singletonList(new SimpleGrantedAuthority("ROLE_USER"))
         );
@@ -97,7 +97,7 @@ class UserControllerTest {
          *    Authorization: Bearer {validAccessToken}
          *    Content-Type: application/json
          *    Body: {
-         *      "username": "newUser",
+         *      "name": "newUser",
          *      "email": "new@example.com",
          *      "password": "NewPass1!"
          *    }
@@ -120,7 +120,7 @@ class UserControllerTest {
         void createUser_Success() throws Exception {
             // given
             UserDto.CreateRequest request = UserDto.CreateRequest.builder()
-                    .username("newUser")
+                    .name("newUser")
                     .email("new@example.com")
                     .password("NewPass1!")
                     .build();
@@ -148,7 +148,7 @@ class UserControllerTest {
          *    Authorization: Bearer {validAccessToken}
          *    Content-Type: application/json
          *    Body: {
-         *      "username": "newUser",
+         *      "name": "newUser",
          *      "email": "invalid-email",
          *      "password": "NewPass1!"
          *    }
@@ -166,7 +166,7 @@ class UserControllerTest {
         void createUser_InvalidEmail() throws Exception {
             // given
             UserDto.CreateRequest request = UserDto.CreateRequest.builder()
-                    .username("newUser")
+                    .name("newUser")
                     .email("invalid-email")
                     .password("NewPass1!")
                     .build();
@@ -214,7 +214,7 @@ class UserControllerTest {
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
+                    .andExpect(jsonPath("$.data.username").value(testUser.getName()))
                     .andExpect(jsonPath("$.data.email").value(testUser.getEmail()));
         }
 
@@ -268,7 +268,7 @@ class UserControllerTest {
          *      "success": true,
          *      "data": {
          *        "id": {userId},
-         *        "username": "testUser",
+         *        "name": "testUser",
          *        "email": "updated@example.com"
          *      }
          *    }
@@ -291,13 +291,13 @@ class UserControllerTest {
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.username").value(testUser.getUsername()))
+                    .andExpect(jsonPath("$.data.username").value(testUser.getName()))
                     .andExpect(jsonPath("$.data.email").value("updated@example.com"));
 
             // DB 업데이트 확인
             User updatedUser = userRepository.findById(testUser.getId())
                     .orElseThrow(() -> new RuntimeException("User not found"));
-            assertThat(updatedUser.getUsername()).isEqualTo(testUser.getUsername());
+            assertThat(updatedUser.getName()).isEqualTo(testUser.getName());
             assertThat(updatedUser.getEmail()).isEqualTo("updated@example.com");
             assertThat(passwordEncoder.matches("UpdatedPass1!", updatedUser.getPassword())).isTrue();
         }

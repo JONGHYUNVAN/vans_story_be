@@ -37,7 +37,7 @@ public interface UserRepository extends JpaRepository<User, Long>, UserRepositor
      * @param username 조회할 사용자명
      * @return 조회된 사용자 (Optional)
      */
-    Optional<User> findByUsername(String username);
+    Optional<User> findByName(String name);
     
     /**
      * 이메일로 사용자를 조회합니다.
@@ -53,7 +53,7 @@ public interface UserRepository extends JpaRepository<User, Long>, UserRepositor
      * @param username 확인할 사용자명
      * @return 존재 여부
      */
-    boolean existsByUsername(String username);
+    boolean existsByName(String name);
     
     /**
      * 이메일 존재 여부를 확인합니다.
