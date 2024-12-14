@@ -56,7 +56,7 @@ public class InitialDataLoader implements CommandLineRunner {
         if (!userService.existsByName("admin")) {
             createAdminIfNotExists();
         }
-        if (!userService.existsByName("testuser")) {
+        if (!userService.existsByName("testuser1!")) {
             createTestUserIfNotExists();
         }
     }
@@ -71,7 +71,7 @@ public class InitialDataLoader implements CommandLineRunner {
         try {
             UserDto.CreateRequest adminRequest = UserDto.CreateRequest.builder()
                     .name("admin")
-                    .password("admin1234")
+                    .password("admin1234!")
                     .email("admin@vans-story.com")
                     .build();
 

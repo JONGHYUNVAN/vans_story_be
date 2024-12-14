@@ -34,7 +34,7 @@ public class AuthController {
      * 사용자 로그인을 처리합니다.
      * Access Token은 응답 본문에, Refresh Token은 HTTP Only 쿠키에 포함하여 반환합니다.
      *
-     * @param request 로그인 요청 정보 (사용자명, 비밀번호)
+     * @param loginRequest 로그인 요청 정보 (사용자명, 비밀번호)
      * @param response HTTP 응답 객체 (쿠키 설정에 사용)
      * @return 로그인 성공 시 Authorization header와 refreshToken 쿠키가 포함된 응답
      * @throws CustomException 인증 실패 시 발생
@@ -42,9 +42,9 @@ public class AuthController {
     @Operation(summary = "로그인", description = "사용자 로그인을 처리합니다.")
     @PostMapping("/login")
     public ResponseEntity<ApiResponse<Void>> login(
-            @Valid @RequestBody LoginRequest request, 
+            @Valid @RequestBody LoginRequest loginRequest, 
             HttpServletResponse response) {
-        authService.login(request, response);
+        authService.login(loginRequest, response);
         
         return ResponseEntity.ok(ApiResponse.success(null));
     }
@@ -65,6 +65,23 @@ public class AuthController {
             HttpServletResponse response) {
         authService.refresh(refreshToken, response);
         
+        return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    /**
+     * 사용자 로그아웃을 처리합니다.
+     * Refresh Token 쿠키를 삭제하여 로그아웃을 수행합니다.
+     *
+     * @param response HTTP 응답 객체
+     * <pre>
+     * MaxAge 0 인 쿠키를 반환하여 클라이언트의 브라우저에서 Refresh Token Cookie를 만료시킵니다.
+     * </pre>
+     * @return 로그아웃 성공 응답
+     */
+    @Operation(summary = "로그아웃", description = "사용자 로그아웃을 처리합니다.")
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<Void>> logout(HttpServletResponse response) {
+        authService.logout(response);    
         return ResponseEntity.ok(ApiResponse.success(null));
     }
 

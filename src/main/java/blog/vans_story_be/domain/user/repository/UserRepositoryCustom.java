@@ -33,8 +33,27 @@ public interface UserRepositoryCustom {
     /**
      * 모든 사용자를 조회합니다.
      * QueryDSL을 사용하여 구현됩니다.
+         /**
+     * 사용자명으로 사용자를 조회합니다.
      * 
-     * @return 모든 사용자 목록
+     * @param username 조회할 사용자명
+     * @return 조회된 사용자 (Optional)
+     * @see blog.vans_story_be.domain.user.repository.UserRepositoryImpl#findUserById(String)
+     * @implNote 실행되는 쿼리:
+     * 
+     * <pre>
+     * SELECT 
+     *     user.id         AS user_id,
+     *     user.username   AS user_username,
+     *     user.email      AS user_email,
+     *     user.password   AS user_password,
+     *     user.role       AS user_role,
+     *     user.created_at AS user_created_at,
+     *     user.updated_at AS user_updated_at
+     * FROM 
+     *     users user
+     * </pre>
+     *
      */
     List<User> findAllUsers();
 
@@ -44,6 +63,20 @@ public interface UserRepositoryCustom {
      * 
      * @param id 조회할 사용자 ID
      * @return 조회된 사용자 (Optional)
+     * @see blog.vans_story_be.domain.user.repository.UserRepositoryImpl#findUserById(Long)
+     * @implNote 실행되는 쿼리:
+     * <pre>
+     * SELECT 
+     *     user.id         AS user_id,
+     *     user.username   AS user_username,
+     *     user.email      AS user_email,
+     *     user.password   AS user_password,
+     *     user.role       AS user_role,
+     *     user.created_at AS user_created_at,
+     *     user.updated_at AS user_updated_at
+     * FROM 
+     *     users user
+     * </pre>
      */
     Optional<User> findUserById(Long id);
 } 

@@ -1,18 +1,18 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '3.2.0'
+    id 'org.springframework.boot' version '3.2.2'
     id 'io.spring.dependency-management' version '1.1.4'
 }
 
 group = 'blog'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '17'
+sourceCompatibility = '21'
 
 archivesBaseName = 'vans_story_be'
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
@@ -56,6 +56,8 @@ dependencies {
     
     // === 로깅 ===
     implementation 'ch.qos.logback:logback-classic'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
     
     // === 코드 생성 도구 ===
     compileOnly 'org.projectlombok:lombok'

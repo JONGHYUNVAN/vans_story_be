@@ -1,6 +1,5 @@
 package blog.vans_story_be.domain.auth.dto;
 
-
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,9 +10,17 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * 로그인 요청 정보를 담는 DTO 클래스
  * 사용자로부터 받은 로그인 정보를 전달하는데 사용됩니다.
+ * 
+ * <pre>
+ * Field Validation:
+ * - email: 이메일 형식의 로그인 아이디 (필수, 공백 불가)
+ * - password: 사용자 비밀번호 (필수, 공백 불가, 8자 이상, 영문/숫자/특수문자 조합)
+ * </pre>
  *
- * @author van
- * @since 1.0
+ * @author vans
+ * @version 1.0.0
+ * @since 2024.12.14
+ *
  */
 @Getter
 @Builder
@@ -22,7 +29,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 @Schema(description = "로그인 요청 DTO")
 public class LoginRequest {
     /**
-     * 이메일 형식의 로그인 아이디
      * @validation 공백 불가
      * @format example@domain.com
      */
@@ -35,7 +41,6 @@ public class LoginRequest {
     private String email;
     
     /**
-     * 사용자 비밀번호
      * @validation 공백 불가
      * @format 8자 이상, 영문/숫자/특수문자 조합
      */

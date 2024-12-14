@@ -1,9 +1,7 @@
 package blog.vans_story_be.domain.auth.service;
 
 import blog.vans_story_be.domain.auth.dto.LoginRequest;
-import blog.vans_story_be.domain.auth.entity.RefreshToken;
 import blog.vans_story_be.domain.auth.jwt.JwtProvider;
-import blog.vans_story_be.domain.auth.repository.RefreshTokenRepository;
 import jakarta.servlet.http.Cookie;
 
 import org.junit.jupiter.api.DisplayName;
@@ -17,13 +15,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.mock.web.MockHttpServletResponse;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.verify;
 
 /**
  * AuthService 테스트 클래스
@@ -45,8 +39,6 @@ class AuthServiceTest {
     @Mock
     private JwtProvider jwtProvider;
 
-    @Mock
-    private RefreshTokenRepository refreshTokenRepository;
     /**
      * 로그인 성공 테스트
      * 인증 성공 시 토큰이 정상적으로 발급되는지 검증합니다.
@@ -59,7 +51,6 @@ class AuthServiceTest {
      * @returns <pre>
      *    Authorization 헤더: "Bearer test.access.token"
      *    refreshToken 쿠키: "test.refresh.token"
-     *    RefreshToken 엔티티가 저장소에 저장됨
      * </pre>
      */
     @SuppressWarnings("null")
@@ -85,7 +76,6 @@ class AuthServiceTest {
         // then
         assertThat(response.getHeader("Authorization")).isEqualTo("Bearer test.access.token");
         assertThat(response.getCookie("refreshToken").getValue()).isEqualTo("test.refresh.token");
-        verify(refreshTokenRepository).save(any(RefreshToken.class));
     }
 
     /**
@@ -112,8 +102,6 @@ class AuthServiceTest {
         
         given(jwtProvider.validateToken(refreshToken)).willReturn(true);
         given(jwtProvider.getAuthentication(refreshToken)).willReturn(authentication);
-        given(refreshTokenRepository.findByUsername("testuser"))
-                .willReturn(Optional.of(new RefreshToken("testuser", refreshToken,LocalDateTime.now().plusDays(7))));
         given(jwtProvider.generateAccessToken(authentication)).willReturn("new.access.token");
         given(jwtProvider.generateRefreshToken(authentication)).willReturn("new.refresh.token");
 
@@ -128,4 +116,4 @@ class AuthServiceTest {
         assertThat(refreshTokenCookie).isNotNull();
         assertThat(refreshTokenCookie.getValue()).isEqualTo("new.refresh.token");
     }
-} 
+}

@@ -24,19 +24,16 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
     private final JPAQueryFactory queryFactory;
 
     /**
-     * 모든 사용자를 조회합니다.
-     * Generated SQL:
+     * 모든 사용자 정보를 조회합니다.
+     * 
+     * @return {@code List<User>} 전체 사용자 목록
+     * @implNote QueryDSL 동작:
      * <pre>
-     * SELECT 
-     *     user.id         AS user_id,
-     *     user.username   AS user_username,
-     *     user.email      AS user_email,
-     *     user.password   AS user_password,
-     *     user.role       AS user_role,
-     *     user.created_at AS user_created_at,
-     *     user.updated_at AS user_updated_at
-     * FROM 
-     *     users user
+     * 1. selectFrom(user): User 엔티티의 모든 필드를 선택하고 FROM 절 생성
+     *    - SELECT id, name, email, password,role, created_at, updated_at
+     *    - FROM users user
+     * 
+     * 2. fetch(): 결과를 List<User>로 변환하여 반환
      * </pre>
      */
     @Override
@@ -50,20 +47,18 @@ public class UserRepositoryImpl implements UserRepositoryCustom {
 
     /**
      * 사용자 ID로 사용자를 조회합니다.
-     * Generated SQL:
+     * 
+     * @param id 조회할 사용자 ID
+     * @return {@code Optional<User>} 조회된 사용자 (존재하지 않을 경우 빈 Optional)
+     * @implNote QueryDSL 동작:
      * <pre>
-     * SELECT 
-     *     user.id         AS user_id,
-     *     user.username   AS user_username,
-     *     user.email      AS user_email,
-     *     user.password   AS user_password,
-     *     user.role       AS user_role,
-     *     user.created_at AS user_created_at,
-     *     user.updated_at AS user_updated_at
-     * FROM 
-     *     users user
-     * WHERE 
-     *     user.id = ?
+     * 1. selectFrom(user): User 엔티티의 모든 필드를 선택하고 FROM 절 생성
+     *    - SELECT id, name, email, password, role, created_at, updated_at
+     *    - FROM users user
+     * 
+     * 2. where(user.id.eq(id)): 주어진 ID와 일치하는 사용자 필터링
+     * 
+     * 3. fetchOne(): 결과를 단일 User 객체로 변환하여 반환
      * </pre>
      */
     @Override

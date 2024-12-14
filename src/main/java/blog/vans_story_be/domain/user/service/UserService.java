@@ -65,7 +65,7 @@ public class UserService {
 
         User user = userMapper.toEntity(request);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
-        user.setRole(Role.USER);  // 기본 역할을 USER로 설정
+        user.setRole(Role.USER);
         
         userRepository.save(user);
         return userMapper.toDto(user);

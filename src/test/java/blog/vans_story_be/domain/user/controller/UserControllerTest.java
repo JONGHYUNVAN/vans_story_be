@@ -108,7 +108,7 @@ class UserControllerTest {
          *      "success": true,
          *      "data": {
          *        "id": {id},
-         *        "username": "newUser",
+         *        "name": "newUser",
          *        "email": "new@example.com",
          *        ...
          *      }
@@ -133,7 +133,7 @@ class UserControllerTest {
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.username").value("newUser"));
+                    .andExpect(jsonPath("$.data.name").value("newUser"));
 
             // DB 저장 확인
             assertThat(userRepository.findByEmail("new@example.com")).isPresent();
@@ -199,7 +199,7 @@ class UserControllerTest {
          *      "success": true,
          *      "data": {
          *        "id": {userId},
-         *        "username": "testUser",
+         *        "name": "testUser",
          *        "email": "test@example.com"
          *      }
          *    }
@@ -214,7 +214,7 @@ class UserControllerTest {
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.username").value(testUser.getName()))
+                    .andExpect(jsonPath("$.data.name").value(testUser.getName()))
                     .andExpect(jsonPath("$.data.email").value(testUser.getEmail()));
         }
 
@@ -291,7 +291,7 @@ class UserControllerTest {
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.success").value(true))
-                    .andExpect(jsonPath("$.data.username").value(testUser.getName()))
+                    .andExpect(jsonPath("$.data.name").value(testUser.getName()))
                     .andExpect(jsonPath("$.data.email").value("updated@example.com"));
 
             // DB 업데이트 확인

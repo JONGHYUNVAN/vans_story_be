@@ -8,7 +8,6 @@ import java.util.Optional;
 /**
  * User 엔티티에 대한 데이터 접근을 처리하는 메인 리포지토리 인터페이스입니다.
  * 
- * <p>이 인터페이스는 다음 기능들을 제공합니다:</p>
  * <ul>
  *   <li>JpaRepository: 기본 CRUD 작업</li>
  *   <li>UserRepositoryCustom: QueryDSL을 사용한 커스텀 쿼리</li>
@@ -34,7 +33,7 @@ public interface UserRepository extends JpaRepository<User, Long>, UserRepositor
     /**
      * 사용자명으로 사용자를 조회합니다.
      * 
-     * @param username 조회할 사용자명
+     * @param name 조회할 사용자명
      * @return 조회된 사용자 (Optional)
      */
     Optional<User> findByName(String name);
@@ -50,7 +49,7 @@ public interface UserRepository extends JpaRepository<User, Long>, UserRepositor
     /**
      * 사용자명 존재 여부를 확인합니다.
      * 
-     * @param username 확인할 사용자명
+     * @param name 확인할 사용자명
      * @return 존재 여부
      */
     boolean existsByName(String name);
