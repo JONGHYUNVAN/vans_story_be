@@ -41,6 +41,10 @@ logging:
     org.hibernate.SQL: debug           # SQL 쿼리 로깅
     org.hibernate.type: trace          # SQL 쿼리 파라미터 로깅
     com.blog: debug                    # 애플리케이션 로그 레벨
+    org.springframework.web: DEBUG     # 웹 요청 로깅
+    org.springframework.web.servlet.DispatcherServlet: DEBUG    # 요청 처리 상세 로깅
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
 
 # 서버 설정
 server:

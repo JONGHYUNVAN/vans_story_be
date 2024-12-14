@@ -6,58 +6,52 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.Optional;
 
 /**
- * User 엔티티에 대한 데이터 접근을 처리하는 메인 리포지토리 인터페이스입니다.
- * 
- * <ul>
- *   <li>JpaRepository: 기본 CRUD 작업</li>
- *   <li>UserRepositoryCustom: QueryDSL을 사용한 커스텀 쿼리</li>
- *   <li>추가 메서드: 사용자명, 이메일 관련 쿼리</li>
- * </ul>
+ * 사용자 정보에 대한 데이터 액세스를 제공하는 리포지토리 인터페이스입니다.</p>
+ * Spring Data JPA의 커스텀 리포지토리 패턴을 구현합니다.
  * 
  * <p>레포지토리 구조:</p>
- * <pre>
- * - UserRepository (이 인터페이스)
- *   - JpaRepository: 기본 CRUD
- *   - UserRepositoryCustom: 커스텀 쿼리
- *   - 추가 쿼리 메서드
- * </pre>
- *
+ * <ul>
+ *   <li>{@code UserRepository} - JpaRepository와 커스텀 인터페이스를 함께 상속</li>
+ *   <li>{@code UserRepositoryCustom} - 커스텀 메서드 정의</li>
+ *   <li>{@code UserRepositoryImpl} - QueryDSL을 사용한 구현체</li>
+ * </ul>
+ * 
  * @author vans
  * @version 1.0.0
  * @since 2024.03.19
+ * @see blog.vans_story_be.domain.user.repository.UserRepositoryImpl
  * @see blog.vans_story_be.domain.user.repository.UserRepositoryCustom
- * @see org.springframework.data.jpa.repository.JpaRepository
  */
 public interface UserRepository extends JpaRepository<User, Long>, UserRepositoryCustom {
     
     /**
-     * 사용자명으로 사용자를 조회합니다.
+     * name으로 User를 조회합니다.
      * 
      * @param name 조회할 사용자명
-     * @return 조회된 사용자 (Optional)
+     * @return 조회된 User (Optional)
      */
     Optional<User> findByName(String name);
     
     /**
-     * 이메일로 사용자를 조회합니다.
+     * email로 User를 조회합니다.
      * 
      * @param email 조회할 이메일
-     * @return 조회된 사용자 (Optional)
+     * @return 조회된 User (Optional)
      */
     Optional<User> findByEmail(String email);
     
     /**
-     * 사용자명 존재 여부를 확인합니다.
+     * 해당 name의 User가 존재하는지 확인합니다.
      * 
-     * @param name 확인할 사용자명
+     * @param name 확인할 name
      * @return 존재 여부
      */
     boolean existsByName(String name);
     
     /**
-     * 이메일 존재 여부를 확인합니다.
+     * 해당 email의 User가 존재하는지 확인합니다.
      * 
-     * @param email 확인할 이메일
+     * @param email 확인할 email
      * @return 존재 여부
      */
     boolean existsByEmail(String email);
