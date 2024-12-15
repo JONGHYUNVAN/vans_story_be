@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 
 /**
  * 전역 예외 처리를 위한 핸들러 클래스
@@ -41,7 +42,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<String>> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
         return ResponseEntity
                 .badRequest()
-                .body(ApiResponse.error("잘못된 요청 형식입니다. 요청 데이터를 확인해주세요."));
+                .body(ApiResponse.error("HttpMessage is not readable. please check your request body."));
     }
 
     /**
@@ -74,5 +75,15 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .badRequest()
                 .body(ApiResponse.error(errorMessage));
+    }
+
+    /**
+     * BadCredentialsException 처리를 위한 핸들러
+     */
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ApiResponse<String>> handleBadCredentialsException(BadCredentialsException e) {
+        return ResponseEntity
+                .status(HttpStatus.UNAUTHORIZED) // 401 Unauthorized
+                .body(ApiResponse.error("Invalid username or password."));
     }
 } 
