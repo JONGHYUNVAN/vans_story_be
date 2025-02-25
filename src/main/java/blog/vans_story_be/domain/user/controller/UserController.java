@@ -1,9 +1,11 @@
 package blog.vans_story_be.domain.user.controller;
-
 import blog.vans_story_be.domain.user.dto.UserDto;
 import blog.vans_story_be.domain.user.service.UserService;
 import blog.vans_story_be.global.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +13,10 @@ import lombok.RequiredArgsConstructor;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.web.bind.annotation.*;
+
+import blog.vans_story_be.domain.auth.annotation.RequireApiKey;
 
 /**
  * 사용자 관련 API를 처리하는 컨트롤러 클래스입니다.
@@ -28,8 +33,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
+@EnableMethodSecurity(prePostEnabled = true)
 public class UserController {
     private final UserService userService;
+
 
     /**
      * 새로운 사용자를 생성합니다.
@@ -96,5 +103,31 @@ public class UserController {
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable("id") Long id) {
         userService.deleteUser(id);
         return ResponseEntity.ok(ApiResponse.success(null));
+    }
+
+    /**
+     * 이메일로 사용자의 닉네임을 조회합니다.
+     *
+     * @param email 조회할 사용자의 이메일
+     * @return 사용자의 닉네임 정보와 함께 200 OK 응답
+     */
+    @RequireApiKey
+    @SecurityRequirement(name = "ApiKeyAuth")
+    @Operation(
+        summary = "이메일로 닉네임 조회", 
+        description = "이메일로 사용자의 닉네임을 조회합니다."
+    )
+    @GetMapping("/email/{email}")
+    public ResponseEntity<ApiResponse<String>> getNicknameByEmail(
+        @Parameter(
+            name = "email",
+            description = "조회할 사용자의 이메일",
+            example = "user@example.com",
+            in = ParameterIn.PATH,
+            required = true
+        )
+        @PathVariable("email") String email
+    ) {
+        return ResponseEntity.ok(ApiResponse.success(userService.getNicknameByEmail(email)));
     }
 } 

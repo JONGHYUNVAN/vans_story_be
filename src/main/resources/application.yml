@@ -34,5 +34,9 @@ cors:
 
 jwt:
   secret-key: "vadfglkjsdflgkjlsdfkjglsdfjglksdjfglkdsjfglkdjslfkgjdlskfjgldksjfglkdsjflgkjsdlfkgjlsdkfjgldskfjgoeo945u3945"
-  accessTokenValidityInSeconds: 1800  # 30분
+  accessTokenValidityInSeconds: 18000  # 300분
   refreshTokenValidityInSeconds: 604800  # 7일 
+
+internal:
+  api:
+    key: vansdevbloguserinternalapikey1234567890! 

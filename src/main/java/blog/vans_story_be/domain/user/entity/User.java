@@ -51,6 +51,10 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String email;
     
+    @NotBlank(message = "User의 닉네임의 값이 없습니다")
+    @Column(nullable = false, unique = true)
+    private String nickname;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;

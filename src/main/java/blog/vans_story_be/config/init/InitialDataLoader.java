@@ -72,6 +72,7 @@ public class InitialDataLoader implements CommandLineRunner {
             UserDto.CreateRequest adminRequest = UserDto.CreateRequest.builder()
                     .name("admin")
                     .password("admin1234!")
+                    .nickname("관리자")
                     .email("admin@vans-story.com")
                     .build();
 
@@ -94,6 +95,7 @@ public class InitialDataLoader implements CommandLineRunner {
             UserDto.CreateRequest userRequest = UserDto.CreateRequest.builder()
                     .name("testuser")
                     .password("Test1234!")
+                    .nickname("테스트 사용자")
                     .email("test@vans-story.com")
                     .build();
 

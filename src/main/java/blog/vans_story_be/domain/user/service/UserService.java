@@ -145,4 +145,17 @@ public class UserService {
     public boolean existsByName(String name) {
         return userRepository.existsByName(name);
     }
+
+    /**
+     * 이메일로 사용자의 닉네임을 조회합니다.
+     *
+     * @param email 조회할 사용자의 이메일
+     * @return 사용자의 닉네임
+     * @throws CustomException 사용자를 찾을 수 없는 경우
+     */
+    public String getNicknameByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .map(User::getNickname)
+                .orElseThrow(() -> new CustomException("사용자를 찾을 수 없습니다."));
+    }
 } 
