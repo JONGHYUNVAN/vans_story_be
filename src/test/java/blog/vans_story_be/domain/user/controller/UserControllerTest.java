@@ -71,6 +71,7 @@ class UserControllerTest {
         // 테스트 사용자 생성
         testUser = userRepository.save(User.builder()
                 .name("testUser")
+                .nickname("testUser")
                 .email("test@example.com")
                 .password(passwordEncoder.encode("Password1!"))
                 .role(Role.USER)
@@ -121,6 +122,7 @@ class UserControllerTest {
             // given
             UserDto.CreateRequest request = UserDto.CreateRequest.builder()
                     .name("newUser")
+                    .nickname("newUser")
                     .email("new@example.com")
                     .password("NewPass1!")
                     .build();

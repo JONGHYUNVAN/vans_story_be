@@ -69,6 +69,7 @@ class AuthControllerTest {
                 .email(testUserEmail)
                 .password(passwordEncoder.encode("password"))
                 .name(testUserName)
+                .nickname(testUserName)
                 .role(Role.USER)
                 .build();
         userRepository.save(testUser);
