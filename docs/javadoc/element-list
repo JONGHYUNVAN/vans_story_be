@@ -1,14 +1,15 @@
 blog.vans_story_be
+blog.vans_story_be.config.apiLogger
 blog.vans_story_be.config.cors
 blog.vans_story_be.config.init
 blog.vans_story_be.config.jpa
 blog.vans_story_be.config.security
 blog.vans_story_be.config.swagger
+blog.vans_story_be.domain.auth.annotation
+blog.vans_story_be.domain.auth.aspect
 blog.vans_story_be.domain.auth.controller
 blog.vans_story_be.domain.auth.dto
-blog.vans_story_be.domain.auth.entity
 blog.vans_story_be.domain.auth.jwt
-blog.vans_story_be.domain.auth.repository
 blog.vans_story_be.domain.auth.service
 blog.vans_story_be.domain.base
 blog.vans_story_be.domain.user.controller
