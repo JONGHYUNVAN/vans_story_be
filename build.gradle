@@ -89,24 +89,35 @@ tasks.named('test') {
     useJUnitPlatform()
 }
 
-tasks.register('copyJavadoc', Copy) {
-    from "${buildDir}/docs/javadoc"
-    into "${projectDir}/docs/javadoc"
-    dependsOn javadoc
-}
-
-tasks.javadoc {
+// === Javadoc 설정 ===
+javadoc {
+    // 한글 지원
     options.encoding = 'UTF-8'
-    options.memberLevel = JavadocMemberLevel.PRIVATE
+    options.charSet = 'UTF-8'
+    options.docEncoding = 'UTF-8'
+    options.locale = 'ko_KR'
     
-    classpath += configurations.compileClasspath
+    // 문서 정보
+    options.windowTitle = 'Vans Story Backend API Documentation'
+    options.docTitle = 'Vans Story 블로그 백엔드 API 문서'
+    options.header = '<b>Vans Story Backend v1.0.0</b>'
+    options.bottom = 'Copyright © 2024 Vans Story. All rights reserved.'
     
+    // 출력 디렉토리
+    destinationDir = file("${projectDir}/docs/javadoc")
+    
+    // Java 17+ 에서 필요한 옵션
     options.addStringOption('Xdoclint:none', '-quiet')
-    
-    if (JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_17)) {
+    if (JavaVersion.current().isJava9Compatible()) {
         options.addBooleanOption('html5', true)
     }
-    
-    // Javadoc 출력 디렉토리 설정
-    destinationDir = file("${projectDir}/docs/javadoc")
+
+    options.stylesheetFile = file("${projectDir}/betterjdocs.css")
+}
+
+// === 문서 생성 작업 ===
+tasks.register('generateDocs') {
+    group = 'documentation'
+    description = 'Generate Java documentation using Javadoc'
+    dependsOn javadoc
 }

@@ -40,3 +40,16 @@ jwt:
 internal:
   api:
     key: vansdevbloguserinternalapikey1234567890! 
+
+app:
+  init:
+    admin:
+      username: ${ADMIN_USERNAME:admin}
+      password: ${ADMIN_PASSWORD:admin1234!}
+      nickname: ${ADMIN_NICKNAME:관리자}
+      email: ${ADMIN_EMAIL:admin@vans-story.com}
+    test:
+      username: ${TEST_USERNAME:testuser}
+      password: ${TEST_PASSWORD:Test1234!}
+      nickname: ${TEST_NICKNAME:테스트 사용자}
+      email: ${TEST_EMAIL:test@vans-story.com} 
