@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    driver-class-name: org.h2.Driver
+    url: jdbc:h2:mem:testdb;MODE=MySQL
+    username: sa
+    password:
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        format_sql: true
+        show_sql: true
+    database-platform: org.hibernate.dialect.H2Dialect
+
+# 환경변수를 프로퍼티로 직접 설정
+VANS_BLOG_ADMIN_USERNAME: admin
+VANS_BLOG_ADMIN_PASSWORD: admin1234!
+VANS_BLOG_ADMIN_NICKNAME: 관리자
+VANS_BLOG_ADMIN_EMAIL: admin@vans-story.com
+VANS_BLOG_TEST_USERNAME: testuser
+VANS_BLOG_TEST_PASSWORD: Test1234!
+VANS_BLOG_TEST_NICKNAME: 테스트 사용자
+VANS_BLOG_TEST_EMAIL: test@vans-story.com
+VANS_BLOG_JWT_SECRET_KEY: dGVzdC1qd3Qtc2VjcmV0LWtleS1mb3ItdGVzdGluZy1vbmx5LWRvLW5vdC11c2UtaW4tcHJvZHVjdGlvbi12YW5zLXN0b3J5LWJsb2ctMjAyNA==
+VANS_BLOG_JWT_ACCESS_TOKEN_VALIDITY: 18000
+VANS_BLOG_JWT_REFRESH_TOKEN_VALIDITY: 604800
+VANS_BLOG_INTERNAL_API_KEY: test-internal-api-key 

@@ -1,14 +1,142 @@
+// plugins {
+//     id 'java'
+//     id 'org.springframework.boot' version '3.2.2'
+//     id 'io.spring.dependency-management' version '1.1.4'
+// }
+
+// group = 'blog'
+// version = '0.0.1-SNAPSHOT'
+// sourceCompatibility = '21'
+
+// archivesBaseName = 'vans_story_be'
+
+// java {
+//     toolchain {
+//         languageVersion = JavaLanguageVersion.of(21)
+//     }
+// }
+
+// configurations {
+//     compileOnly {
+//         extendsFrom annotationProcessor
+//     }
+// }
+
+// repositories {
+//     mavenCentral()
+// }
+
+// dependencies {
+//     // === 스프링 부트 핵심 스타터 ===
+//     implementation 'org.springframework.boot:spring-boot-starter-web'
+//     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    
+//     // === 보안 관련 ===
+//     implementation 'org.springframework.boot:spring-boot-starter-security'
+//     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+    
+//     // === JSON 처리 ===
+//     implementation 'com.fasterxml.jackson.core:jackson-databind'
+//     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    
+//     // === 데이터베이스 ===
+//     runtimeOnly 'com.mysql:mysql-connector-j'
+//     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
+//     implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+//     annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
+//     annotationProcessor "jakarta.persistence:jakarta.persistence-api"
+//     annotationProcessor "jakarta.annotation:jakarta.annotation-api"
+    
+//     //=== Validation ===
+//     implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+//     // === 개발 도구 ===
+//     developmentOnly 'org.springframework.boot:spring-boot-devtools'
+//     implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+    
+//     // === 로깅 ===
+//     implementation 'ch.qos.logback:logback-classic'
+//     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    
+//     // === 코드 생성 도구 ===
+//     compileOnly 'org.projectlombok:lombok'
+//     annotationProcessor 'org.projectlombok:lombok'
+//     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+//     annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+//     annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    
+//     // === 테스트 ===
+//     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+//     testImplementation 'org.springframework.security:spring-security-test'
+//     testImplementation 'org.mockito:mockito-core'
+//     testImplementation 'org.mockito:mockito-junit-jupiter'
+//     testImplementation 'org.mockito:mockito-inline:5.2.0'
+//     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+//     testRuntimeOnly 'com.h2database:h2' 
+//     // === 인증 ===
+//     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+//     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+//     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    
+//     // === 캐싱 ===
+//     implementation 'org.springframework.boot:spring-boot-starter-cache'
+//     implementation 'com.github.ben-manes.caffeine:caffeine'
+
+// }
+
+// tasks.named('test') {
+//     useJUnitPlatform()
+// }
+
+// // === Javadoc 설정 ===
+// javadoc {
+//     // 한글 지원
+//     options.encoding = 'UTF-8'
+//     options.charSet = 'UTF-8'
+//     options.docEncoding = 'UTF-8'
+//     options.locale = 'ko_KR'
+    
+//     // 문서 정보
+//     options.windowTitle = 'Vans Story Backend API Documentation'
+//     options.docTitle = 'Vans Story 블로그 백엔드 API 문서'
+//     options.header = '<b>Vans Story Backend v1.0.0</b>'
+//     options.bottom = 'Copyright © 2024 Vans Story. All rights reserved.'
+    
+//     // 출력 디렉토리
+//     destinationDir = file("${projectDir}/docs/javadoc")
+    
+//     // Java 17+ 에서 필요한 옵션
+//     options.addStringOption('Xdoclint:none', '-quiet')
+//     if (JavaVersion.current().isJava9Compatible()) {
+//         options.addBooleanOption('html5', true)
+//     }
+
+//     options.stylesheetFile = file("${projectDir}/betterjdocs.css")
+// }
+
+// // === 문서 생성 작업 ===
+// tasks.register('generateDocs') {
+//     group = 'documentation'
+//     description = 'Generate Java documentation using Javadoc'
+//     dependsOn javadoc
+// }
+
+
+
+// === Kotlin 설정 ===
 plugins {
-    id 'java'
     id 'org.springframework.boot' version '3.2.2'
     id 'io.spring.dependency-management' version '1.1.4'
+    id 'org.jetbrains.kotlin.jvm' version '1.9.22'
+    id 'org.jetbrains.kotlin.plugin.spring' version '1.9.22'
+    id 'org.jetbrains.kotlin.plugin.jpa' version '1.9.22'
+    id 'org.jetbrains.kotlin.kapt' version '1.9.22'
+    id 'org.jetbrains.dokka' version '1.9.10'
 }
 
 group = 'blog'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '21'
-
-archivesBaseName = 'vans_story_be'
 
 java {
     toolchain {
@@ -16,10 +144,8 @@ java {
     }
 }
 
-configurations {
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
+kotlin {
+    jvmToolchain(21)
 }
 
 repositories {
@@ -27,97 +153,110 @@ repositories {
 }
 
 dependencies {
-    // === 스프링 부트 핵심 스타터 ===
+    // === Kotlin ===
+    implementation 'org.jetbrains.kotlin:kotlin-reflect'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactor'
+    
+    // === 스프링 부트 ===
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    
-    // === 보안 관련 ===
     implementation 'org.springframework.boot:spring-boot-starter-security'
-    implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
-    
-    // === JSON 처리 ===
-    implementation 'com.fasterxml.jackson.core:jackson-databind'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-    
-    // === 데이터베이스 ===
-    runtimeOnly 'com.mysql:mysql-connector-j'
-    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client'
-    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
-    annotationProcessor "com.querydsl:querydsl-apt:${dependencyManagement.importedProperties['querydsl.version']}:jakarta"
-    annotationProcessor "jakarta.persistence:jakarta.persistence-api"
-    annotationProcessor "jakarta.annotation:jakarta.annotation-api"
-    
-    //=== Validation ===
     implementation 'org.springframework.boot:spring-boot-starter-validation'
-
-    // === 개발 도구 ===
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
-    
-    // === 로깅 ===
-    implementation 'ch.qos.logback:logback-classic'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-
     
-    // === 코드 생성 도구 ===
-    compileOnly 'org.projectlombok:lombok'
-    annotationProcessor 'org.projectlombok:lombok'
+    // === QueryDSL ===
+    implementation 'com.querydsl:querydsl-jpa:5.0.0:jakarta'
+    kapt "com.querydsl:querydsl-apt:5.0.0:jakarta"
+    kapt "jakarta.persistence:jakarta.persistence-api"
+    kapt "jakarta.annotation:jakarta.annotation-api"
+    
+    // === MapStruct ===
     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
-    annotationProcessor 'org.mapstruct:mapstruct-processor:1.5.5.Final'
-    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    kapt 'org.mapstruct:mapstruct-processor:1.5.5.Final'
+    kapt 'org.springframework.boot:spring-boot-configuration-processor'
     
-    // === 테스트 ===
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'org.springframework.security:spring-security-test'
-    testImplementation 'org.mockito:mockito-core'
-    testImplementation 'org.mockito:mockito-junit-jupiter'
-    testImplementation 'org.mockito:mockito-inline:5.2.0'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    testRuntimeOnly 'com.h2database:h2' 
-    // === 인증 ===
+    // === JWT ===
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     
-    // === 캐싱 ===
-    implementation 'org.springframework.boot:spring-boot-starter-cache'
-    implementation 'com.github.ben-manes.caffeine:caffeine'
-
+    // === 데이터베이스 ===
+    runtimeOnly 'com.mysql:mysql-connector-j'
+    runtimeOnly 'com.h2database:h2'
+    
+    // === API 문서화 ===
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0'
+    
+    // === 로깅 ===
+    implementation 'io.github.microutils:kotlin-logging-jvm:3.0.5'
+    
+    // === 환경변수 관리 ===
+    implementation 'me.paulschwarz:spring-dotenv:2.5.4'
+    
+    // === 테스트 ===
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'io.kotest:kotest-runner-junit5:5.8.0'
+    testImplementation 'io.mockk:mockk:1.13.9'
+    testRuntimeOnly 'com.h2database:h2'
 }
 
-tasks.named('test') {
+tasks.withType(Test) {
     useJUnitPlatform()
 }
 
-// === Javadoc 설정 ===
-javadoc {
-    // 한글 지원
-    options.encoding = 'UTF-8'
-    options.charSet = 'UTF-8'
-    options.docEncoding = 'UTF-8'
-    options.locale = 'ko_KR'
-    
-    // 문서 정보
-    options.windowTitle = 'Vans Story Backend API Documentation'
-    options.docTitle = 'Vans Story 블로그 백엔드 API 문서'
-    options.header = '<b>Vans Story Backend v1.0.0</b>'
-    options.bottom = 'Copyright © 2024 Vans Story. All rights reserved.'
-    
-    // 출력 디렉토리
-    destinationDir = file("${projectDir}/docs/javadoc")
-    
-    // Java 17+ 에서 필요한 옵션
-    options.addStringOption('Xdoclint:none', '-quiet')
-    if (JavaVersion.current().isJava9Compatible()) {
-        options.addBooleanOption('html5', true)
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+    kotlinOptions {
+        freeCompilerArgs += ['-Xjsr305=strict']
+        jvmTarget = '21'
+        apiVersion = '1.9'
+        languageVersion = '1.9'
     }
-
-    options.stylesheetFile = file("${projectDir}/betterjdocs.css")
 }
 
-// === 문서 생성 작업 ===
-tasks.register('generateDocs') {
-    group = 'documentation'
-    description = 'Generate Java documentation using Javadoc'
-    dependsOn javadoc
+dokkaHtml {
+    outputDirectory = file("${projectDir}/docs/dokka")
+    
+    dokkaSourceSets {
+        main {
+            moduleName = "Vans Story Backend"
+            includes.from("Module.md")
+            
+            sourceLink {
+                localDirectory.set(file("src/main/kotlin"))
+                remoteUrl.set(new URL("https://github.com/yourusername/vans_story_be/tree/main/src/main/kotlin"))
+                remoteLineSuffix.set("#L")
+            }
+            
+            perPackageOption {
+                matchingRegex.set(".*\\.internal.*")
+                suppress.set(true)
+            }
+        }
+    }
 }
+
+// QueryDSL 설정
+def querydslDir = "$buildDir/generated/querydsl"
+
+sourceSets {
+    main.kotlin.srcDirs += [ querydslDir ]
+    main.java.srcDirs = []  // Java 소스 디렉토리 제외
+}
+
+kapt {
+    arguments {
+        arg("querydsl.entityPathsForLombokOff", true)
+    }
+}
+
+clean {
+    delete file(querydslDir)
+}
+
+// bootRun JVM 인코딩 설정
+bootRun {
+    jvmArgs = ['-Dfile.encoding=UTF-8', '-Dconsole.encoding=UTF-8', '-Dspring.profiles.active=dev']
+}
+
