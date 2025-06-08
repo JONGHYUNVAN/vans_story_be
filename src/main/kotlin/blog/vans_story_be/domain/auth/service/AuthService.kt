@@ -1,7 +1,6 @@
 package blog.vans_story_be.domain.auth.service
 
 import blog.vans_story_be.domain.auth.dto.LoginRequest
-import blog.vans_story_be.domain.auth.dto.TokenPair
 import blog.vans_story_be.domain.auth.jwt.JwtProvider
 import blog.vans_story_be.global.exception.CustomException
 import jakarta.servlet.http.Cookie
@@ -12,7 +11,6 @@ import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 
 /**
  * 인증 관련 비즈니스 로직을 처리하는 서비스입니다.
@@ -46,7 +44,6 @@ import org.springframework.transaction.annotation.Transactional
  * @see LoginRequest
  */
 @Service
-@Transactional
 class AuthService(
     private val authenticationManager: AuthenticationManager,
     private val jwtProvider: JwtProvider
@@ -69,11 +66,9 @@ class AuthService(
      * @throws BadCredentialsException 인증 실패 시
      */
     fun login(loginRequest: LoginRequest, response: HttpServletResponse) {
-        logger.info { "로그인 시도: ${loginRequest.email}" }
         runCatching {
             val authentication = authenticateUser(loginRequest)
             generateAndSetTokens(authentication, response)
-            logger.info { "사용자 로그인 성공: ${authentication.name}" }
         }.onFailure { e ->
             logger.error(e) { "로그인 실패: ${loginRequest.email}, 오류: ${e.message}" }
             throw when (e) {
@@ -219,17 +214,3 @@ class AuthService(
         }
 }
 
-/**
- * HttpServletResponse의 확장 함수들입니다.
- */
-private fun HttpServletResponse.addCookie(cookie: Cookie) {
-    this.addCookie(cookie)
-}
-
-/**
- * 인증 결과를 나타내는 시일드 클래스입니다.
- */
-sealed class AuthResult {
-    data class Success(val tokenPair: TokenPair) : AuthResult()
-    data class Failure(val exception: Exception) : AuthResult()
-} 

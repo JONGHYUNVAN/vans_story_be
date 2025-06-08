@@ -106,23 +106,8 @@ class InitialDataLoader(
      * @throws RuntimeException 초기 데이터 로드 실패 시
      */
     override fun run(vararg args: String) {
-        log.info { "InitialDataLoader 시작" }
-        
-        // 환경변수 값 로그 출력
-        log.info { "=== 환경변수 값 확인 ===" }
-        log.info { "adminUsername: '$adminUsername'" }
-        log.info { "adminPassword: '$adminPassword'" }
-        log.info { "adminNickname: '$adminNickname'" }
-        log.info { "adminEmail: '$adminEmail'" }
-        log.info { "testUsername: '$testUsername'" }
-        log.info { "testPassword: '$testPassword'" }
-        log.info { "testNickname: '$testNickname'" }
-        log.info { "testEmail: '$testEmail'" }
-        log.info { "=========================" }
-        
         runCatching {
             initializeData()
-            log.info { "초기 데이터 로드 완료" }
         }.onFailure { e ->
             log.error(e) { "초기 데이터 로드 중 상세 오류: ${e.message}" }
             when {
@@ -176,7 +161,6 @@ class InitialDataLoader(
                     email = config.email
                 )
                 creator(request)
-                log.info { "${config.nickname} 계정 생성 완료" }
             }.onFailure { e ->
                 log.error(e) { "${config.nickname} 계정 생성 중 오류 발생" }
                 throw e

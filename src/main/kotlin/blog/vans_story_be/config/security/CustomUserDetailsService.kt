@@ -9,7 +9,6 @@ import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
 import org.springframework.security.core.userdetails.UsernameNotFoundException
 import org.springframework.stereotype.Service
-import org.springframework.transaction.annotation.Transactional
 
 /**
  * Spring Security의 UserDetailsService 구현체입니다.
@@ -76,7 +75,6 @@ class CustomUserDetailsService(
      * @return UserDetails 사용자 상세 정보
      * @throws CustomException 사용자를 찾을 수 없는 경우
      */
-    @Transactional(readOnly = true)
     override fun loadUserByUsername(email: String): UserDetails {
         logger.info { "사용자 조회 시도: $email" }
         return userRepository.findByEmail(email)

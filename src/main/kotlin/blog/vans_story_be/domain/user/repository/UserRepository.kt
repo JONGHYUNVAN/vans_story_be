@@ -1,7 +1,13 @@
 package blog.vans_story_be.domain.user.repository
 
 import blog.vans_story_be.domain.user.entity.User
-import org.springframework.data.jpa.repository.JpaRepository
+import blog.vans_story_be.domain.user.entity.Users
+import blog.vans_story_be.domain.user.entity.Role
+import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.sql.select
+import org.jetbrains.exposed.sql.and
+import org.jetbrains.exposed.sql.selectAll
+import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.springframework.stereotype.Repository
 import java.util.Optional
 
@@ -38,62 +44,16 @@ import java.util.Optional
  * @since 2024.03.19
  */
 @Repository
-interface UserRepository : JpaRepository<User, Long>, UserRepositoryCustom {
-    /**
-     * 사용자명으로 사용자를 조회합니다.
-     *
-     * @param name 조회할 사용자명
-     * @return 조회된 사용자 (Optional)
-     *
-     * 사용 예시:
-     * ```kotlin
-     * val user = userRepository.findByName("홍길동")
-     *     .orElseThrow { NoSuchElementException("사용자를 찾을 수 없습니다") }
-     * ```
-     */
+interface UserRepository {
     fun findByName(name: String): Optional<User>
-
-    /**
-     * 이메일로 사용자를 조회합니다.
-     *
-     * @param email 조회할 이메일
-     * @return 조회된 사용자 (Optional)
-     *
-     * 사용 예시:
-     * ```kotlin
-     * val user = userRepository.findByEmail("user@example.com")
-     *     .orElseThrow { NoSuchElementException("사용자를 찾을 수 없습니다") }
-     * ```
-     */
     fun findByEmail(email: String): Optional<User>
-
-    /**
-     * 사용자명이 이미 존재하는지 확인합니다.
-     *
-     * @param name 확인할 사용자명
-     * @return 존재 여부
-     *
-     * 사용 예시:
-     * ```kotlin
-     * if (userRepository.existsByName("홍길동")) {
-     *     throw IllegalArgumentException("이미 존재하는 사용자명입니다")
-     * }
-     * ```
-     */
     fun existsByName(name: String): Boolean
-
-    /**
-     * 이메일이 이미 존재하는지 확인합니다.
-     *
-     * @param email 확인할 이메일
-     * @return 존재 여부
-     *
-     * 사용 예시:
-     * ```kotlin
-     * if (userRepository.existsByEmail("user@example.com")) {
-     *     throw IllegalArgumentException("이미 존재하는 이메일입니다")
-     * }
-     * ```
-     */
     fun existsByEmail(email: String): Boolean
+    fun save(user: User): User
+    fun delete(user: User)
+    fun findAllUsers(): List<User>
+    fun findUserById(id: Long): Optional<User>
+    fun existsByNickname(nickname: String): Boolean
+    fun findAll(): List<User>
+    fun findById(id: Long): User?
 } 

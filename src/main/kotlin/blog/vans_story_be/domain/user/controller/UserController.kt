@@ -1,7 +1,5 @@
 package blog.vans_story_be.domain.user.controller
 
-import blog.vans_story_be.domain.user.dto.CreateRequest
-import blog.vans_story_be.domain.user.dto.UpdateRequest
 import blog.vans_story_be.domain.user.dto.UserDto
 import blog.vans_story_be.domain.user.service.UserService
 import blog.vans_story_be.global.response.ApiResponse

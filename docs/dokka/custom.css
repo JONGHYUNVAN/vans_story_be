@@ -1,0 +1,66 @@
+/* Material Theme 커스텀 스타일 */
+
+:root {
+    --md-primary-fg-color: #1976d2;
+    --md-primary-fg-color--light: #42a5f5;
+    --md-primary-fg-color--dark: #1565c0;
+    --md-accent-fg-color: #ff4081;
+    --md-accent-fg-color--transparent: rgba(255, 64, 129, 0.1);
+}
+
+/* 헤더 스타일링 */
+.md-header {
+    background-color: var(--md-primary-fg-color);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* 네비게이션 스타일링 */
+.md-nav__link {
+    color: var(--md-primary-fg-color);
+}
+
+.md-nav__link:hover {
+    color: var(--md-primary-fg-color--light);
+}
+
+/* 코드 블록 스타일링 */
+.md-typeset code {
+    color: var(--md-accent-fg-color);
+    background-color: var(--md-accent-fg-color--transparent);
+}
+
+/* 푸터 스타일링 */
+.md-footer {
+    background-color: var(--md-primary-fg-color--dark);
+}
+
+/* 타이포그래피 개선 */
+.md-typeset h1 {
+    color: var(--md-primary-fg-color);
+    font-weight: 600;
+}
+
+.md-typeset h2 {
+    border-bottom: 2px solid var(--md-primary-fg-color--light);
+    padding-bottom: 0.3em;
+}
+
+/* 테이블 스타일링 */
+.md-typeset table:not([class]) {
+    border: 1px solid var(--md-primary-fg-color--light);
+}
+
+.md-typeset table:not([class]) th {
+    background-color: var(--md-primary-fg-color--transparent);
+}
+
+/* 버튼 스타일링 */
+.md-button {
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.md-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+} 
