@@ -47,6 +47,7 @@ class CorsConfig(
                 allowedOrigins = corsProperties.allowedOrigins
                 allowedMethods = corsProperties.allowedMethods
                 allowedHeaders = corsProperties.allowedHeaders
+                exposedHeaders = corsProperties.exposedHeaders
                 maxAge = corsProperties.maxAge
                 allowCredentials = corsProperties.allowCredentials
             })

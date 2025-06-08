@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component
  *   <li>allowedOrigins: 허용된 출처 목록</li>
  *   <li>allowedMethods: 허용된 HTTP 메서드 목록</li>
  *   <li>allowedHeaders: 허용된 헤더 목록</li>
+ *   <li>exposedHeaders: 클라이언트에서 접근 가능한 헤더 목록</li>
  *   <li>maxAge: 프리플라이트 요청의 캐시 시간 (초)</li>
  *   <li>allowCredentials: 인증 정보 전송 허용 여부</li>
  * </ul>
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Component
  * cors:
  *   allowed-origins:
  *     - http://localhost:3000
+ *     - http://localhost:5173
  *     - https://vans-story.com
  *   allowed-methods:
  *     - GET
@@ -31,7 +33,13 @@ import org.springframework.stereotype.Component
  *     - PUT
  *     - DELETE
  *   allowed-headers:
- *     - "*"
+ *     - Authorization
+ *     - Content-Type
+ *     - Accept
+ *     - Origin
+ *     - X-Requested-With
+ *   exposed-headers:
+ *     - Authorization
  *   max-age: 3600
  *   allow-credentials: true
  * }
@@ -53,13 +61,22 @@ import org.springframework.stereotype.Component
 @Component
 class CorsProperties {
     var allowedOrigins: List<String> = listOf(
-        "http://localhost:3000",
-        "https://vans-story.com"
+        "http://localhost:3000",  // 개발 환경
+        "https://vans-story.com"  // 프로덕션 환경
     )
     var allowedMethods: List<String> = listOf(
         "GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"
-) 
-    var allowedHeaders: List<String> = listOf("*")
+    )
+    var allowedHeaders: List<String> = listOf(
+        "Authorization",
+        "Content-Type",
+        "Accept",
+        "Origin",
+        "X-Requested-With"
+    )
+    var exposedHeaders: List<String> = listOf(
+        "Authorization"  // 클라이언트에서 접근 가능한 헤더
+    )
     var maxAge: Long = 3600L
     var allowCredentials: Boolean = true
 } 
