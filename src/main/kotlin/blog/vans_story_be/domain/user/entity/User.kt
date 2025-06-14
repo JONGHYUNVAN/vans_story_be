@@ -57,7 +57,7 @@ object Users : LongIdTable("users") {
  *
  * @author vans
  * @version 1.0.0
- * @since 2024.03.19
+ * @since 2025.06.07
  */
 class User(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<User>(Users)

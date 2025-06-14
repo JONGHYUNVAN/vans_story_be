@@ -11,8 +11,8 @@ import org.springframework.security.core.GrantedAuthority
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.User
 import org.springframework.stereotype.Component
-import java.security.Key
 import java.util.*
+import javax.crypto.SecretKey
 
 /**
  * JWT 토큰의 생성, 검증, 파싱을 담당하는 클래스입니다.
@@ -51,7 +51,7 @@ import java.util.*
 class JwtProvider(
     private val jwtProperties: JwtProperties
 ) {
-    private lateinit var key: Key
+    private lateinit var key: SecretKey
     private val logger = KotlinLogging.logger {}
 
     /**
@@ -96,10 +96,10 @@ class JwtProvider(
         val validity = Date(now.time + validityInSeconds * 1000)
 
         return Jwts.builder()
-            .setSubject(authentication.name)
+            .subject(authentication.name)
             .claim("auth", authorities)
-            .signWith(key, SignatureAlgorithm.HS512)
-            .setExpiration(validity)
+            .signWith(key)
+            .expiration(validity)
             .compact()
     }
 
@@ -155,9 +155,9 @@ class JwtProvider(
      * @throws JwtException 토큰 파싱 실패 시
      */
     private fun parseClaims(token: String): Claims =
-        Jwts.parserBuilder()
-            .setSigningKey(key)
+        Jwts.parser()
+            .verifyWith(key as SecretKey)
             .build()
-            .parseClaimsJws(token)
-            .body
+            .parseSignedClaims(token)
+            .payload
 } 

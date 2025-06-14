@@ -41,7 +41,7 @@ import java.util.Optional
  *
  * @author vans
  * @version 1.0.0
- * @since 2024.03.19
+ * @since 2025.06.07
  */
 @Repository
 interface UserRepository {

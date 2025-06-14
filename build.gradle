@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id 'org.springframework.boot' version '3.5.0'
     id 'io.spring.dependency-management' version '1.1.4'
@@ -5,7 +7,7 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.spring' version '1.9.22'
     id 'org.jetbrains.kotlin.plugin.jpa' version '1.9.22'
     id 'org.jetbrains.kotlin.kapt' version '1.9.22'
-    id("org.jetbrains.dokka") version "2.0.0"
+    id 'org.jetbrains.dokka' version '2.0.0'
 }
 
 group = 'blog'
@@ -41,6 +43,9 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
     implementation 'org.springframework.boot:spring-boot-starter-aop'
     
+    // === Jackson Kotlin 지원 ===
+    implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
+    
     // === Exposed ===
     implementation 'org.jetbrains.exposed:exposed-core:0.45.0'
     implementation 'org.jetbrains.exposed:exposed-dao:0.45.0'
@@ -51,9 +56,9 @@ dependencies {
     implementation 'org.mapstruct:mapstruct:1.5.5.Final'
     
     // === JWT ===
-    implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
     
     // === 데이터베이스 ===
     runtimeOnly 'org.mariadb.jdbc:mariadb-java-client:3.3.3'
@@ -72,87 +77,31 @@ dependencies {
     testImplementation 'io.kotest:kotest-runner-junit5:5.8.0'
     testImplementation 'io.mockk:mockk:1.13.9'
     testRuntimeOnly 'com.h2database:h2'
-    
-    // === Dokka 최신 버전은 플러그인으로만 관리 ===
 }
 
-tasks.withType(Test) {
-    useJUnitPlatform()
-}
-
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
+// === Kotlin 컴파일 설정 ===
+tasks.withType(KotlinCompile).configureEach {
     kotlinOptions {
-        freeCompilerArgs += [
-            '-Xjsr305=strict',
-            '-Xjvm-default=all'  // Exposed를 위한 설정
-        ]
         jvmTarget = '21'
         apiVersion = '1.9'
         languageVersion = '1.9'
-    }
-}
-
-dokkaHtml {
-    outputDirectory = file("${projectDir}/docs/dokka")
-    dokkaSourceSets {
-        main {
-            moduleName = "Vans Story Backend"
-            includes.from("Module.md")
-            sourceLink {
-                localDirectory.set(file("src/main/kotlin"))
-                remoteUrl.set(new URL("https://github.com/yourusername/vans_story_be/tree/main/src/main/kotlin"))
-                remoteLineSuffix.set("#L")
-            }
-            perPackageOption {
-                matchingRegex.set(".*\\.internal.*")
-                suppress.set(true)
-            }
-        }
-    }
-}
-
-// Exposed 설정
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-    kotlinOptions {
         freeCompilerArgs += [
             '-Xjsr305=strict',
-            '-Xjvm-default=all'  // Exposed를 위한 설정
-        ]
-        jvmTarget = '21'
-        apiVersion = '1.9'
-        languageVersion = '1.9'
-    }
-}
-
-// QueryDSL 관련 설정 제거
-clean {
-    delete file("$buildDir/generated")
-}
-
-// bootRun JVM 인코딩 설정
-bootRun {
-    jvmArgs = ['-Dfile.encoding=UTF-8', '-Dconsole.encoding=UTF-8', '-Dspring.profiles.active=dev']
-}
-
-// 빌드 성능 최적화 설정
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-    kotlinOptions {
-        jvmTarget = "17"
-        freeCompilerArgs += [
-            "-Xopt-in=kotlin.RequiresOptIn",
-            "-Xjvm-default=all"
+            '-Xjvm-default=all',
+            '-opt-in=kotlin.RequiresOptIn'
         ]
     }
 }
 
-// 테스트 최적화
+// === 테스트 설정 ===
 tasks.withType(Test).configureEach {
+    useJUnitPlatform()
     maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
     forkEvery = 100
     failFast = true
 }
 
-// Kapt 설정
+// === Kapt 설정 ===
 kapt {
     javacOptions {
         option("-source", "21")
@@ -160,13 +109,22 @@ kapt {
     }
 }
 
-tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile).configureEach {
-    kotlinOptions {
-        jvmTarget = "21"
-        freeCompilerArgs += [
-            "-Xopt-in=kotlin.RequiresOptIn",
-            "-Xjvm-default=all"
-        ]
+// === 애플리케이션 실행 설정 ===
+bootRun {
+    jvmArgs = ['-Dfile.encoding=UTF-8', '-Dconsole.encoding=UTF-8', '-Dspring.profiles.active=dev']
+}
+
+// === 빌드 정리 ===
+clean {
+    delete file("$buildDir/generated")
+}
+
+// === Dokka 설정 ===
+configurations.matching { it.name.startsWith("dokka") }.configureEach {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "com.fasterxml.jackson.core") {
+            useVersion("2.15.3")
+        }
     }
 }
 
