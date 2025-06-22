@@ -1,24 +1,14 @@
 spring:
-  profiles:
-    # 기본 프로필을 dev로 설정
-    # 별도 설정 없이 애플리케이션 실행 시 개발 환경(dev)으로 실행됨
-    active: dev
-  
   config:
     import: optional:file:.env[.properties]
 
-  datasource:
-    driver-class-name: org.mariadb.jdbc.Driver
-    url: jdbc:mariadb://localhost:3306/vans_story_be?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useUnicode=true
-    username: root
-    password: root
-    hikari:
-      connection-init-sql: SET NAMES utf8mb4
+
 
   main:
     allow-bean-definition-overriding: true
 
 server:
+  port: ${SERVER_PORT:8080}
   servlet:
     encoding:
       # 문자 인코딩 설정
@@ -45,10 +35,6 @@ springdoc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json 
   packages-to-scan: blog.vans_story_be
-
-cors:
-  allowed-origins:
-    - http://localhost:3000
 
 logging:
   level:

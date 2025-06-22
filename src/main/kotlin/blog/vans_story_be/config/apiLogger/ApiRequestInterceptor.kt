@@ -19,7 +19,7 @@ import java.time.Instant
  *   <li>요청 시작 시점에 HTTP 메서드와 URI 로깅</li>
  *   <li>응답 완료 시점에 HTTP 상태 코드와 처리 시간 로깅</li>
  *   <li>예외 발생 시 상세 정보 로깅</li>
- *   <li>MDC를 활용한 요청 추적</li>
+ *   <li>MDC 를 활용한 요청 추적</li>
  * </ul>
  * 
  * <h3>로깅 출력 예시:</h3>
@@ -54,7 +54,7 @@ import java.time.Instant
 @Component
 class ApiRequestInterceptor : HandlerInterceptor {
     /**
-     * 인터셉터의 공통 상수와 로거를 관리하는 companion object입니다.
+     * 인터셉터의 공통 상수와 로거를 관리하는 companion object.
      * 
      * <p>이 객체는 클래스의 모든 인스턴스가 공유하는 정적 멤버를 포함합니다.</p>
      * 
@@ -157,7 +157,7 @@ class ApiRequestInterceptor : HandlerInterceptor {
      * @param request HTTP 요청 객체
      * @param response HTTP 응답 객체
      * @param handler 요청을 처리할 핸들러
-     * @return 항상 true를 반환하여 요청 처리를 계속 진행
+     * @return 항상 true 를 반환하여 요청 처리를 계속 진행
      */
     override fun preHandle(
         request: HttpServletRequest,

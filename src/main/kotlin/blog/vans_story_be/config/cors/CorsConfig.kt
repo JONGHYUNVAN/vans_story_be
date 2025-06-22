@@ -33,7 +33,7 @@ class CorsConfig(
      * 
      * 이 메서드는 Spring의 CORS 필터에서 사용할 CORS 설정을 정의합니다.
      * 모든 경로에 대해 동일한 CORS 정책을 적용하며,
-     * 정책은 CorsProperties를 통해 외부 설정에서 관리됩니다.
+     * 정책은 CorsProperties를 통해 환경변수에서 관리됩니다.
      * 
      * @return UrlBasedCorsConfigurationSource CORS 설정이 적용된 설정 소스
      * @see CorsProperties
