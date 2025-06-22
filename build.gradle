@@ -122,21 +122,11 @@ jar {
 
 bootJar {
     archiveFileName = 'vans-story-be.jar'
-    manifest {
-        attributes(
-            'Implementation-Title': project.name,
-            'Implementation-Version': project.version,
-            'Main-Class': 'blog.vans_story_be.VansStoryBeApplicationKt'
-        )
-    }
-    
-    // 메모리 절약을 위한 압축 최적화
     archiveVersion = ''
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     
-    // 빌드 시점에 불필요한 파일 제외
+    // 빌드 시점에 불필요한 파일 제외 (MANIFEST.MF는 제외하지 않음)
     exclude '**/META-INF/maven/**'
-    exclude '**/META-INF/MANIFEST.MF'
     exclude '**/*.kotlin_metadata'
     exclude '**/*.kotlin_builtins'
 }
@@ -175,5 +165,10 @@ configurations.matching { it.name.startsWith("dokka") }.configureEach {
             useVersion("2.15.3")
         }
     }
+}
+
+// Spring Boot 메인 클래스 설정
+springBoot {
+    mainClass = 'blog.vans_story_be.VansStoryBeApplicationKt'
 }
 
