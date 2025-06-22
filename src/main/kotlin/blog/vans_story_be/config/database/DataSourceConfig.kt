@@ -29,7 +29,7 @@ class DataSourceConfig {
     fun dataSource(): DataSource {
         val config = HikariConfig().apply {
             driverClassName = "org.mariadb.jdbc.Driver"
-            jdbcUrl = "jdbc:mariadb://$dbHost:$dbPort/$dbName?serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
+            jdbcUrl = "jdbc:mariadb://$dbHost:$dbPort/$dbName?createDatabaseIfNotExist=true&serverTimezone=Asia/Seoul&characterEncoding=UTF-8"
             username = dbUsername
             password = dbPassword
             
