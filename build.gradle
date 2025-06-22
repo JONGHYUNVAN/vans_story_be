@@ -114,6 +114,55 @@ bootRun {
     jvmArgs = ['-Dfile.encoding=UTF-8', '-Dconsole.encoding=UTF-8', '-Dspring.profiles.active=dev']
 }
 
+// === JAR 빌드 최적화 (cloudtype 배포용) ===
+jar {
+    enabled = false
+    archiveClassifier = ''
+}
+
+bootJar {
+    archiveFileName = 'vans-story-be.jar'
+    manifest {
+        attributes(
+            'Implementation-Title': project.name,
+            'Implementation-Version': project.version,
+            'Main-Class': 'blog.vans_story_be.VansStoryBeApplicationKt'
+        )
+    }
+    
+    // 메모리 절약을 위한 압축 최적화
+    archiveVersion = ''
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    
+    // 빌드 시점에 불필요한 파일 제외
+    exclude '**/META-INF/maven/**'
+    exclude '**/META-INF/MANIFEST.MF'
+    exclude '**/*.kotlin_metadata'
+    exclude '**/*.kotlin_builtins'
+}
+
+// cloudtype 배포를 위한 실행 스크립트
+task createStartScript(type: CreateStartScripts) {
+    outputDir = file('build/scripts')
+    mainClass = 'blog.vans_story_be.VansStoryBeApplicationKt'
+    applicationName = 'vans-story-be'
+    classpath = configurations.runtimeClasspath
+    
+    // 512MB 환경에 최적화된 JVM 옵션
+    defaultJvmOpts = [
+        '-Xms128m',
+        '-Xmx384m',
+        '-XX:+UseG1GC',
+        '-XX:+UseStringDeduplication',
+        '-XX:MaxGCPauseMillis=200',
+        '-XX:+DisableExplicitGC',
+        '-Djava.security.egd=file:/dev/./urandom',
+        '-Dfile.encoding=UTF-8',
+        '-Dconsole.encoding=UTF-8',
+        '-Dspring.profiles.active=prod'
+    ]
+}
+
 // === 빌드 정리 ===
 clean {
     delete file("$buildDir/generated")

@@ -2,23 +2,32 @@ spring:
   config:
     import: optional:file:.env[.properties]
 
-
-
   main:
     allow-bean-definition-overriding: true
 
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${PORT:${SERVER_PORT:8080}}  # cloudtype에서 PORT 환경변수 사용
   servlet:
     encoding:
       # 문자 인코딩 설정
       charset: UTF-8
       # 인코딩 강제 적용 (항상 설정된 인코딩을 사용)
       force: true
-
-# JVM 인코딩 설정
+  # cloudtype 배포를 위한 서버 설정
+  shutdown: graceful
+  
+# 512MB 메모리 환경에 최적화된 JVM 설정
 java:
-  options: -Dfile.encoding=UTF-8 -Dconsole.encoding=UTF-8
+  options: >-
+    -Dfile.encoding=UTF-8 
+    -Dconsole.encoding=UTF-8
+    -Xms128m 
+    -Xmx384m 
+    -XX:+UseG1GC 
+    -XX:+UseStringDeduplication
+    -XX:MaxGCPauseMillis=200
+    -XX:+DisableExplicitGC
+    -Djava.security.egd=file:/dev/./urandom
 
 # Swagger UI 설정
 springdoc:
@@ -38,20 +47,38 @@ springdoc:
 
 logging:
   level:
-    blog.vans_story_be: DEBUG
-    org.springframework.security: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    blog.vans_story_be: ${LOG_LEVEL:INFO}  # 프로덕션에서는 INFO 레벨 사용
+    org.springframework.security: ${LOG_LEVEL:INFO}
+    org.hibernate.SQL: ${LOG_LEVEL:INFO}
+    org.hibernate.type.descriptor.sql.BasicBinder: ${LOG_LEVEL:INFO}
 
 management:
   endpoints:
     web:
       exposure:
         include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
 
 exposed:
-  show-sql: true
-  generate-ddl: true
+  show-sql: ${SHOW_SQL:false}  # 프로덕션에서는 false
+  generate-ddl: ${GENERATE_DDL:true}
+
+# cloudtype 배포를 위한 추가 설정
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  
+# 프로덕션 환경에서 더 엄격한 로깅
+logging:
+  level:
+    blog.vans_story_be: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN
+    org.hibernate.type.descriptor.sql.BasicBinder: WARN
 
  
 
