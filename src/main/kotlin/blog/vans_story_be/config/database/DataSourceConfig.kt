@@ -6,9 +6,18 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import javax.sql.DataSource
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
+import org.springframework.boot.context.event.ApplicationReadyEvent
+import org.springframework.context.event.EventListener
+import blog.vans_story_be.domain.user.entity.Users
+import mu.KotlinLogging
 
 @Configuration
 class DataSourceConfig {
+
+    private val log = KotlinLogging.logger {}
 
     @Value("\${VANS_BLOG_DB_HOST:localhost}")
     private lateinit var dbHost: String
@@ -43,5 +52,19 @@ class DataSourceConfig {
         }
         
         return HikariDataSource(config)
+    }
+
+    @EventListener(ApplicationReadyEvent::class)
+    fun createTables() {
+        runCatching {
+            Database.connect(dataSource())
+            transaction {
+                log.info { "데이터베이스 테이블 생성 시작..." }
+                SchemaUtils.create(Users)
+                log.info { "데이터베이스 테이블 생성 완료!" }
+            }
+        }.onFailure { e ->
+            log.error(e) { "테이블 생성 중 오류 발생: ${e.message}" }
+        }
     }
 } 

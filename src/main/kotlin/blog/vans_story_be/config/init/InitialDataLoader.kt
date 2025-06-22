@@ -6,6 +6,9 @@ import mu.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.transactions.transaction
+import javax.sql.DataSource
 
 /**
  * 초기 데이터 로더 클래스입니다.
@@ -48,7 +51,8 @@ import org.springframework.stereotype.Component
  */
 @Component
 class InitialDataLoader(
-    private val userService: UserService
+    private val userService: UserService,
+    private val dataSource: DataSource
 ) : CommandLineRunner {
     companion object {
         private val log = KotlinLogging.logger {}
@@ -107,6 +111,8 @@ class InitialDataLoader(
      */
     override fun run(vararg args: String) {
         runCatching {
+            // Exposed Database 연결 설정
+            Database.connect(dataSource)
             initializeData()
         }.onFailure { e ->
             log.error(e) { "초기 데이터 로드 중 상세 오류: ${e.message}" }
@@ -129,7 +135,7 @@ class InitialDataLoader(
      * 
      * @throws Exception 계정 생성 중 오류 발생 시
      */
-    private fun initializeData() {
+    private fun initializeData() = transaction {
         
         val adminConfig = AccountConfig(adminUsername, adminPassword, adminNickname, adminEmail)
         val testConfig = AccountConfig(testUsername, testPassword, testNickname, testEmail)
