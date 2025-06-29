@@ -12,6 +12,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import blog.vans_story_be.domain.user.entity.Users
+import blog.vans_story_be.domain.oauth.entity.UserOAuths
 import mu.KotlinLogging
 
 @Configuration
@@ -60,7 +61,7 @@ class DataSourceConfig {
             Database.connect(dataSource())
             transaction {
                 log.info { "데이터베이스 테이블 생성 시작..." }
-                SchemaUtils.create(Users)
+                SchemaUtils.create(Users, UserOAuths)
                 log.info { "데이터베이스 테이블 생성 완료!" }
             }
         }.onFailure { e ->

@@ -2,6 +2,8 @@ package blog.vans_story_be.domain.auth.controller
 
 import blog.vans_story_be.domain.auth.dto.LoginRequest
 import blog.vans_story_be.domain.auth.service.AuthService
+import blog.vans_story_be.domain.user.dto.UserDto
+import blog.vans_story_be.domain.user.service.UserService
 import blog.vans_story_be.global.response.ApiResponse
 import blog.vans_story_be.global.response.noContent
 import blog.vans_story_be.global.response.ok
@@ -37,9 +39,35 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/v1/auth")
 @Tag(name = "Auth", description = "인증 API")
 class AuthController(
-    private val authService: AuthService
+    private val authService: AuthService,
+    private val userService: UserService
 ) {
     private val logger = KotlinLogging.logger {}
+
+    /**
+     * 사용자 회원가입을 처리합니다.
+     *
+     * @param signupRequest 회원가입 요청 정보
+     * @return 회원가입 성공 응답
+     */
+    @Operation(
+        summary = "회원가입",
+        description = "새로운 사용자 계정을 생성합니다."
+    )
+    @PostMapping("/signup")
+    fun signup(
+        @Valid @RequestBody signupRequest: UserDto.CreateRequest
+    ): ResponseEntity<ApiResponse<UserDto.Response>> {
+        return try {
+            logger.info { "[회원가입] 시작" }
+            val user = userService.createUser(signupRequest)
+            logger.info { "[회원가입] 완료" }
+            ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(user))
+        } catch (e: Exception) {
+            logger.error(e) { "[회원가입] 실패" }
+            throw e
+        }
+    }
 
     /**
      * 사용자 로그인을 처리합니다.

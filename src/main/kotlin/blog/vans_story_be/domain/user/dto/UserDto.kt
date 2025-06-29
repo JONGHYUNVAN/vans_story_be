@@ -18,7 +18,6 @@ import jakarta.validation.constraints.Size
  * ```kotlin
  * // 사용자 생성 요청
  * val createRequest = UserDto.CreateRequest(
- *     name = "홍길동",
  *     email = "user@example.com",
  *     password = "Password1!",
  *     nickname = "길동이"
@@ -32,7 +31,6 @@ import jakarta.validation.constraints.Size
  * // 사용자 정보 응답
  * val response = UserDto.Response(
  *     id = 1L,
- *     name = "홍길동",
  *     email = "user@example.com",
  *     nickname = "길동이",
  *     role = Role.USER,
@@ -49,17 +47,13 @@ sealed class UserDto {
     /**
      * 사용자 생성 요청 DTO
      *
-     * @property name 사용자 이름 (필수, 2-50자)
      * @property password 비밀번호 (필수, 8자 이상, 영문/숫자/특수문자 조합)
      * @property email 이메일 주소 (필수, 유효한 이메일 형식)
      * @property nickname 닉네임 (필수, 2-50자)
      */
     data class CreateRequest(
-        @field:NotBlank(message = "이름은 필수입니다")
-        @field:Size(min = 2, max = 50, message = "이름은 2자 이상 50자 이하여야 합니다")
-        val name: String,
 
-        @field:NotBlank(message = "이메일은 필수입니다")
+    @field:NotBlank(message = "이메일은 필수입니다")
         @field:Email(message = "올바른 이메일 형식이 아닙니다")
         val email: String,
 
@@ -102,7 +96,6 @@ sealed class UserDto {
      * 사용자 정보 응답 DTO
      *
      * @property id 사용자 고유 식별자
-     * @property name 사용자 이름
      * @property email 이메일 주소
      * @property nickname 사용자 닉네임
      * @property role 사용자 권한
@@ -111,7 +104,6 @@ sealed class UserDto {
      */
     data class Response(
         val id: Long = 0L,
-        val name: String = "",
         val email: String = "",
         val nickname: String = "",
         val role: Role = Role.USER,

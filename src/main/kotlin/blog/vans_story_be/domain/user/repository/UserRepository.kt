@@ -45,9 +45,7 @@ import java.util.Optional
  */
 @Repository
 interface UserRepository {
-    fun findByName(name: String): Optional<User>
     fun findByEmail(email: String): Optional<User>
-    fun existsByName(name: String): Boolean
     fun existsByEmail(email: String): Boolean
     fun save(user: User): User
     fun delete(user: User)

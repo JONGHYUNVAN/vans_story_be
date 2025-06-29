@@ -140,8 +140,8 @@ class InitialDataLoader(
         val adminConfig = AccountConfig(adminUsername, adminPassword, adminNickname, adminEmail)
         val testConfig = AccountConfig(testUsername, testPassword, testNickname, testEmail)
 
-        createAccountIfNotExists(ADMIN_USERNAME, adminConfig, ::createAdminAccount)
-        createAccountIfNotExists(TEST_USERNAME, testConfig, ::createTestAccount)
+        createAccountIfNotExists(adminConfig, ::createAdminAccount)
+        createAccountIfNotExists(testConfig, ::createTestAccount)
         
         log.info { "초기 데이터 설정 완료" }
     }
@@ -149,19 +149,16 @@ class InitialDataLoader(
     /**
      * 계정이 존재하지 않을 경우 생성하는 메서드입니다.
      * 
-     * @param username 확인할 계정 아이디
      * @param config 계정 설정 정보
      * @param creator 계정 생성 함수
      */
     private fun createAccountIfNotExists(
-        username: String,
         config: AccountConfig,
         creator: (UserDto.CreateRequest) -> Unit
     ) {
-        if (!userService.existsByName(username)) {
+        if (!userService.existsByEmail(config.email)) {
             runCatching {
                 val request = UserDto.CreateRequest(
-                    name = config.username,
                     password = config.password,
                     nickname = config.nickname,
                     email = config.email

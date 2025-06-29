@@ -78,7 +78,7 @@ class UserController(
      * //     {
      * //       "id": 1,
      * //       "email": "user1@example.com",
-     * //       "name": "User 1",
+     * //       "nickname": "User 1",
      * //       "role": "USER"
      * //     },
      * //     ...
@@ -113,7 +113,7 @@ class UserController(
      * //   "data": {
      * //     "id": 1,
      * //     "email": "user1@example.com",
-     * //     "name": "User 1",
+     * //     "nickname": "User 1",
      * //     "role": "USER"
      * //   },
      * //   "message": null
@@ -162,9 +162,9 @@ class UserController(
      */
     @Operation(
         summary = "사용자 정보 수정",
-        description = "특정 ID의 사용자 정보를 수정합니다."
+        description = "특정 ID의 사용자 정보를 부분적으로 수정합니다."
     )
-    @PutMapping("/{id}")
+    @PatchMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or authentication.principal.id == #id")
     fun updateUser(
         @Parameter(description = "사용자 ID", required = true)

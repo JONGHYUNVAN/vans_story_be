@@ -4,6 +4,7 @@ import blog.vans_story_be.domain.user.entity.User
 import blog.vans_story_be.domain.user.repository.UserRepository
 import blog.vans_story_be.global.exception.CustomException
 import mu.KotlinLogging
+import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService
@@ -77,15 +78,17 @@ class CustomUserDetailsService(
      */
     override fun loadUserByUsername(email: String): UserDetails {
         logger.info { "사용자 조회 시도: $email" }
-        return userRepository.findByEmail(email)
-            .map { user ->
-                logger.info { "사용자 발견: ${user.email}, 역할: ${user.role}" }
-                createUserDetails(user)
-            }
-            .orElseThrow { 
-                logger.error { "사용자를 찾을 수 없습니다: $email" }
-                CustomException("사용자를 찾을 수 없습니다.") 
-            }
+        return transaction {
+            userRepository.findByEmail(email)
+                .map { user ->
+                    logger.info { "사용자 발견: ${user.email}, 역할: ${user.role}" }
+                    createUserDetails(user)
+                }
+                .orElseThrow { 
+                    logger.error { "사용자를 찾을 수 없습니다: $email" }
+                    CustomException("사용자를 찾을 수 없습니다.") 
+                }
+        }
     }
 
     /**

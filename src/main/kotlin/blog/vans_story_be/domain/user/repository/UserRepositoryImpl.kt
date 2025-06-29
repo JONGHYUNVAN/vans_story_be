@@ -22,38 +22,16 @@ import java.util.Optional
 @Repository
 class UserRepositoryImpl : UserRepository {
     /**
-     * 이름으로 사용자 조회
-     * @param name 사용자 이름
-     * @return Optional<User>
-     * @sample SQL
-     * SELECT * FROM users WHERE name = ? LIMIT 1;
-     */
-    override fun findByName(name: String): Optional<User> = transaction {
-        Optional.ofNullable(User.find { Users.name.eq(name) }.firstOrNull())
-    }
-
-    /**
      * 이메일로 사용자 조회
      * @param email 사용자 이메일
      * @return Optional<User>
      * @sample SQL
      * SELECT * FROM users WHERE email = ? LIMIT 1;
      */
-    override fun findByEmail(email: String): Optional<User> = transaction {
+    override fun findByEmail(email: String): Optional<User> =
         Optional.ofNullable(User.find { Users.email.eq(email) }.firstOrNull())
-    }
 
-    /**
-     * 이름으로 사용자 존재 여부 확인
-     * @param name 사용자 이름
-     * @return Boolean
-     * @sample SQL
-     * SELECT EXISTS (SELECT 1 FROM users WHERE name = ? LIMIT 1);
-     */
-    override fun existsByName(name: String): Boolean = transaction {
-        Users.select { Users.name eq name }
-            .any()
-    }
+
 
     /**
      * 이메일로 사용자 존재 여부 확인
@@ -62,10 +40,8 @@ class UserRepositoryImpl : UserRepository {
      * @sample SQL
      * SELECT EXISTS (SELECT 1 FROM users WHERE email = ? LIMIT 1);
      */
-    override fun existsByEmail(email: String): Boolean = transaction {
-        Users.select { Users.email eq email }
-            .any()
-    }
+    override fun existsByEmail(email: String): Boolean =
+        Users.select { Users.email eq email }.any()
 
     /**
      * 닉네임으로 사용자 존재 여부 확인
@@ -74,10 +50,8 @@ class UserRepositoryImpl : UserRepository {
      * @sample SQL
      * SELECT EXISTS (SELECT 1 FROM users WHERE nickname = ? LIMIT 1);
      */
-    override fun existsByNickname(nickname: String): Boolean = transaction {
-        Users.select { Users.nickname eq nickname }
-            .any()
-    }
+    override fun existsByNickname(nickname: String): Boolean =
+        Users.select { Users.nickname eq nickname }.any()
 
     /**
      * 사용자 저장(업데이트)
@@ -87,9 +61,9 @@ class UserRepositoryImpl : UserRepository {
      * UPDATE users SET ... WHERE id = ?;
      * (User 엔티티의 변경사항이 있을 때 flush 시점에 UPDATE 쿼리 발생)
      */
-    override fun save(user: User): User = transaction {
+    override fun save(user: User): User {
         user.flush()
-        user
+        return user
     }
 
     /**
@@ -98,9 +72,7 @@ class UserRepositoryImpl : UserRepository {
      * @sample SQL
      * DELETE FROM users WHERE id = ?;
      */
-    override fun delete(user: User) = transaction {
-        user.delete()
-    }
+    override fun delete(user: User) = user.delete()
 
     /**
      * 모든 사용자 조회
@@ -108,9 +80,7 @@ class UserRepositoryImpl : UserRepository {
      * @sample SQL
      * SELECT * FROM users;
      */
-    override fun findAllUsers(): List<User> = transaction {
-        User.all().toList()
-    }
+    override fun findAllUsers(): List<User> = User.all().toList()
 
     /**
      * ID로 사용자 조회 (Optional)
@@ -119,9 +89,8 @@ class UserRepositoryImpl : UserRepository {
      * @sample SQL
      * SELECT * FROM users WHERE id = ? LIMIT 1;
      */
-    override fun findUserById(id: Long): Optional<User> = transaction {
+    override fun findUserById(id: Long): Optional<User> =
         Optional.ofNullable(User.findById(id))
-    }
 
     /**
      * 모든 사용자 조회 (중복 구현)
@@ -129,9 +98,7 @@ class UserRepositoryImpl : UserRepository {
      * @sample SQL
      * SELECT * FROM users;
      */
-    override fun findAll(): List<User> = transaction {
-        User.all().toList()
-    }
+    override fun findAll(): List<User> = User.all().toList()
 
     /**
      * ID로 사용자 조회 (nullable)
@@ -140,7 +107,5 @@ class UserRepositoryImpl : UserRepository {
      * @sample SQL
      * SELECT * FROM users WHERE id = ? LIMIT 1;
      */
-    override fun findById(id: Long): User? = transaction {
-        User.findById(id)
-    }
+    override fun findById(id: Long): User? = User.findById(id)
 } 

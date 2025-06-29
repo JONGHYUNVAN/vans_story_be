@@ -9,6 +9,7 @@ import blog.vans_story_be.global.exception.CustomException
 import mu.KotlinLogging
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
+import org.jetbrains.exposed.sql.transactions.transaction
 
 /**
  * 사용자 관련 비즈니스 로직을 처리하는 서비스 클래스
@@ -71,7 +72,7 @@ class UserService(
      * userService.updateRole(user.id, Role.ADMIN)
      * ```
      */
-    fun createUser(request: UserDto.CreateRequest): UserDto.Response {
+    fun createUser(request: UserDto.CreateRequest): UserDto.Response = transaction {
         // 이메일 중복 체크
         if (userRepository.existsByEmail(request.email)) {
             throw CustomException("이미 존재하는 이메일입니다")
@@ -89,8 +90,8 @@ class UserService(
         val user = userMapper.toEntity(request, encodedPassword)
         userRepository.save(user)
 
-        log.info { "사용자 계정 생성 완료: id=${user.id}, name=${user.name}" }
-        return userMapper.toResponseDto(user)
+        log.info { "사용자 계정 생성 완료: id=${user.id}, email=${user.email}" }
+        userMapper.toResponseDto(user)
     }
 
     /**
@@ -110,15 +111,31 @@ class UserService(
      * val admin = userService.createAdmin(adminRequest)
      * ```
      */
-    fun createAdmin(request: UserDto.CreateRequest): UserDto.Response {
-        // 일반 사용자로 먼저 생성
-        val user = createUser(request)
-        
-        // 관리자 역할로 변경
-        updateRole(user.id, Role.ADMIN)
-        
-        // 변경된 사용자 정보 반환
-        return getUserById(user.id)
+    fun createAdmin(request: UserDto.CreateRequest): UserDto.Response = transaction {
+        // 이메일 중복 체크
+        if (userRepository.existsByEmail(request.email)) {
+            throw CustomException("이미 존재하는 이메일입니다")
+        }
+
+        // 닉네임 중복 체크
+        if (userRepository.existsByNickname(request.nickname)) {
+            throw CustomException("이미 존재하는 닉네임입니다")
+        }
+
+        // 비밀번호 암호화
+        val encodedPassword = passwordEncoder.encode(request.password)
+
+        // 관리자 엔티티 생성
+        val user = User.new {
+            this.email = request.email
+            this.password = encodedPassword
+            this.nickname = request.nickname
+            this.role = Role.ADMIN
+        }
+        userRepository.save(user)
+
+        log.info { "관리자 계정 생성 완료: id=${user.id}, email=${user.email}" }
+        userMapper.toResponseDto(user)
     }
 
     /**
@@ -130,7 +147,7 @@ class UserService(
      * ```kotlin
      * val users = userService.getAllUsers()
      * users.forEach { user ->
-     *     println("사용자: ${user.name}, 이메일: ${user.email}")
+     *     println("사용자: ${user.nickname}, 이메일: ${user.email}")
      * }
      * ```
      */
@@ -149,7 +166,7 @@ class UserService(
      * 사용 예시:
      * ```kotlin
      * val user = userService.getUserById(1L)
-     * println("조회된 사용자: ${user.name}")
+     * println("조회된 사용자: ${user.nickname}")
      * ```
      */
     fun getUserById(id: Long): UserDto.Response =
@@ -175,7 +192,7 @@ class UserService(
      * val updatedUser = userService.updateUser(1L, updateRequest)
      * ```
      */
-    fun updateUser(id: Long, request: UserDto.UpdateRequest): UserDto.Response {
+    fun updateUser(id: Long, request: UserDto.UpdateRequest): UserDto.Response = transaction {
         val user = userRepository.findUserById(id)
             .orElseThrow { CustomException("사용자를 찾을 수 없습니다") }
 
@@ -203,7 +220,7 @@ class UserService(
         userRepository.save(user)
 
         log.info { "사용자 정보 수정 완료: id=$id" }
-        return userMapper.toResponseDto(user)
+        userMapper.toResponseDto(user)
     }
 
     /**
@@ -217,29 +234,31 @@ class UserService(
      * userService.deleteUser(1L)
      * ```
      */
-    fun deleteUser(id: Long) {
+    fun deleteUser(id: Long) = transaction {
         val user = userRepository.findUserById(id)
             .orElseThrow { CustomException("사용자를 찾을 수 없습니다") }
         userRepository.delete(user)
         log.info { "사용자 삭제 완료: id=$id" }
     }
 
+
+
     /**
-     * 사용자명 존재 여부를 확인합니다.
+     * 이메일 존재 여부를 확인합니다.
      *
-     * @param name 확인할 사용자명
-     * @return 사용자명 존재 여부
+     * @param email 확인할 이메일
+     * @return 이메일 존재 여부
      *
      * 사용 예시:
      * ```kotlin
-     * if (userService.existsByName("홍길동")) {
-     *     println("이미 존재하는 사용자명입니다")
+     * if (userService.existsByEmail("user@example.com")) {
+     *     println("이미 존재하는 이메일입니다")
      * }
      * ```
      */
-    fun existsByName(name: String): Boolean =
-        userRepository.existsByName(name)
-            .also { log.debug { "사용자명 존재 여부 확인: name=$name, exists=$it" } }
+    fun existsByEmail(email: String): Boolean =
+        userRepository.existsByEmail(email)
+            .also { log.debug { "이메일 존재 여부 확인: email=$email, exists=$it" } }
 
     /**
      * 이메일로 사용자의 닉네임을 조회합니다.
@@ -268,7 +287,7 @@ class UserService(
      * @throws CustomException 사용자를 찾을 수 없는 경우
      * @throws IllegalArgumentException 비밀번호가 비어있는 경우
      */
-    fun updatePassword(id: Long, newPassword: String) {
+    fun updatePassword(id: Long, newPassword: String) = transaction {
         require(newPassword.isNotBlank()) { "비밀번호는 비어있을 수 없습니다" }
         
         val user = userRepository.findUserById(id)
@@ -291,7 +310,7 @@ class UserService(
      * @param newRole 새로운 역할
      * @throws CustomException 사용자를 찾을 수 없는 경우
      */
-    fun updateRole(id: Long, newRole: Role) {
+    fun updateRole(id: Long, newRole: Role) = transaction {
         val user = userRepository.findUserById(id)
             .orElseThrow { CustomException("사용자를 찾을 수 없습니다") }
         

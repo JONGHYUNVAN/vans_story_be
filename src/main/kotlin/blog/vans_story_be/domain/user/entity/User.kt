@@ -15,7 +15,6 @@ import java.time.LocalDateTime
  * 사용자 정보를 관리하는 테이블 정의
  */
 object Users : LongIdTable("users") {
-    val name = varchar("name", 50).uniqueIndex()
     val password = varchar("password", 100)
     val email = varchar("email", 100).uniqueIndex()
     val nickname = varchar("nickname", 50).uniqueIndex()
@@ -33,7 +32,6 @@ object Users : LongIdTable("users") {
  *
  * 필드 설명:
  * - [id]: 자동 생성된 사용자 ID
- * - [name]: 사용자명 (필수, 3자 이상 50자 이하)
  * - [password]: 비밀번호 (필수, 8자 이상, 영문자, 숫자, 특수문자 포함)
  * - [email]: 이메일 (필수, 유효한 이메일 형식)
  * - [nickname]: 닉네임 (필수, 고유값)
@@ -43,7 +41,6 @@ object Users : LongIdTable("users") {
  * ```kotlin
  * // 사용자 생성
  * val user = User(
- *     name = "홍길동",
  *     password = "encryptedPassword",
  *     email = "user@example.com",
  *     nickname = "길동이",
@@ -62,7 +59,6 @@ object Users : LongIdTable("users") {
 class User(id: EntityID<Long>) : LongEntity(id) {
     companion object : LongEntityClass<User>(Users)
 
-    var name: String by Users.name
     var password: String by Users.password
     var email: String by Users.email
     var nickname: String by Users.nickname
@@ -71,5 +67,5 @@ class User(id: EntityID<Long>) : LongEntity(id) {
     var updatedAt: LocalDateTime by Users.updatedAt
 
     override fun toString(): String =
-        "User(id=$id, name='$name', email='$email', nickname='$nickname', role=$role)"
+        "User(id=$id, email='$email', nickname='$nickname', role=$role)"
 } 
