@@ -25,7 +25,7 @@ class OAuthRepositoryImpl : OAuthRepository {
 
     private val logger = KotlinLogging.logger {}
 
-    override fun save(userId: Long, provider: String, providerId: String, providerEmail: String?): UserOAuth {
+    override fun save(userId: Long, provider: String, providerId: String): UserOAuth {
         return transaction {
             logger.info { "OAuth 연동 정보 저장 시작 - userId: $userId, provider: $provider, providerId: $providerId" }
             
@@ -33,7 +33,6 @@ class OAuthRepositoryImpl : OAuthRepository {
                 this.userId = EntityID(userId, Users)
                 this.provider = provider
                 this.providerId = providerId
-                this.providerEmail = providerEmail
                 this.updatedAt = LocalDateTime.now()
             }
             

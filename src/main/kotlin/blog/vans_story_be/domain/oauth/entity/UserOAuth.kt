@@ -15,7 +15,6 @@ object UserOAuths : LongIdTable("user_oauths") {
     val userId = reference("user_id", Users)
     val provider = varchar("provider", 50)
     val providerId = varchar("provider_id", 100)
-    val providerEmail = varchar("provider_email", 100).nullable()
     val createdAt = datetime("created_at").default(LocalDateTime.now())
     val updatedAt = datetime("updated_at").default(LocalDateTime.now())
     
@@ -38,7 +37,7 @@ object UserOAuths : LongIdTable("user_oauths") {
  * - [userId]: 연결된 사용자 ID (Users 테이블 참조)
  * - [provider]: OAuth 제공업체 (google, kakao, naver 등)
  * - [providerId]: OAuth 제공업체에서 제공하는 사용자 고유 ID
- * - [providerEmail]: OAuth 제공업체에서 제공하는 이메일 (선택적)
+
  * - [createdAt]: 연동 생성 시간
  * - [updatedAt]: 연동 정보 수정 시간
  *
@@ -49,7 +48,7 @@ object UserOAuths : LongIdTable("user_oauths") {
  *     userId = EntityID(1, Users)
  *     provider = "google"
  *     providerId = "google_user_12345"
- *     providerEmail = "user@gmail.com"
+
  * }
  * ```
  *
@@ -63,7 +62,6 @@ class UserOAuth(id: EntityID<Long>) : LongEntity(id) {
     var userId by UserOAuths.userId
     var provider by UserOAuths.provider
     var providerId by UserOAuths.providerId
-    var providerEmail by UserOAuths.providerEmail
     var createdAt by UserOAuths.createdAt
     var updatedAt by UserOAuths.updatedAt
 

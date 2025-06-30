@@ -4,6 +4,8 @@
 
 이 문서는 MSA 환경에서 OAuth 소셜 로그인을 지원하기 위해 설계된 OAuth 도메인의 User Flow와 Data Flow를 상세하게 설명합니다.
 
+**핵심 정책**: OAuth 로그인은 기존 사용자가 사전에 link를 통해 연동을 완료한 계정만 허용됩니다. 새로운 OAuth 계정으로 자동 가입은 지원하지 않습니다.
+
 ### 🏗️ 아키텍처 전제 조건
 
 - **중간 서버**: OAuth 제공업체(Google, Kakao, Naver 등)와의 실제 OAuth 인증 처리
@@ -16,6 +18,7 @@
 2. **유연한 연동**: 일반 계정과 OAuth 계정 간 자유로운 연결/해제
 3. **다중 OAuth 지원**: 한 사용자가 여러 OAuth 제공업체 계정 연결 가능
 4. **중복 방지**: 같은 OAuth 계정은 하나의 사용자에만 연결
+5. **명시적 연동**: OAuth 로그인은 사전 연동된 계정만 허용 (자동 가입 없음)
 
 ## 🗄️ 데이터 모델
 
@@ -60,10 +63,8 @@ class UserOAuth {
 🖥️ 백엔드 (/oauth/login)
     ↓
 ❓ 기존 OAuth 연동 확인
-    ├─ ✅ 기존 사용자 → JWT 토큰 발급
-    └─ ❌ 신규 사용자 → 계정 생성 → OAuth 연동 저장 → JWT 토큰 발급
-    ↓
-🎉 로그인 완료
+    ├─ ✅ 기존 연동 → JWT 토큰 발급 → 🎉 로그인 완료
+    └─ ❌ 연동 없음 → ⚠️ 오류 응답 (연동 필요)
 ```
 
 #### 🔄 Data Flow
@@ -80,36 +81,19 @@ class UserOAuth {
 1. **OAuth 연동 정보 조회**
    ```kotlin
    // Exposed ORM을 통한 조회
-   oauthRepository.findByProviderAndProviderId("google", "google_user_12345")
+   val existingOAuth = oauthRepository.findByProviderAndProviderId("google", "google_user_12345")
    ```
 
-2. **Case A: 기존 OAuth 계정 존재**
+2. **Case A: 기존 OAuth 연동 존재**
    - 연결된 User 정보 조회
    - JWT 토큰 발급 (Access Token + Refresh Token)
    - 응답 헤더에 토큰 설정
 
-3. **Case B: 신규 OAuth 계정**
-   - 새로운 User 생성:
-     ```kotlin
-     User(
-         email = "google_google_user_12345@oauth.local",
-         password = "랜덤_UUID_16자리",
-         nickname = "google_google_u",
-         role = USER
-     )
-     ```
-   - OAuth 연동 정보 저장:
-     ```kotlin
-     UserOAuth(
-         userId = newUser.id,
-         provider = "google",
-         providerId = "google_user_12345",
-         providerEmail = null
-     )
-     ```
-   - JWT 토큰 발급
+3. **Case B: 연동되지 않은 OAuth 계정**
+   - CustomException 발생: "연동되지 않은 OAuth 계정입니다. 먼저 기존 계정에 OAuth 연동을 설정해주세요."
+   - 400 Bad Request 응답
 
-**Response**
+**Response (성공)**
 ```http
 HTTP/1.1 200 OK
 Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
@@ -119,6 +103,17 @@ Set-Cookie: refreshToken=eyJhbGciOiJIUzI1NiIs...; HttpOnly; Secure; Path=/
   "success": true,
   "data": null,
   "message": "OAuth 로그인이 완료되었습니다."
+}
+```
+
+**Response (연동 없음)**
+```http
+HTTP/1.1 400 Bad Request
+
+{
+  "success": false,
+  "data": null,
+  "message": "연동되지 않은 OAuth 계정입니다. 먼저 기존 계정에 OAuth 연동을 설정해주세요."
 }
 ```
 

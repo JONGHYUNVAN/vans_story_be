@@ -109,10 +109,6 @@ class OAuthDto {
         @JsonProperty("providerId")
         val providerId: String,
 
-        @Schema(description = "OAuth 제공업체 이메일", example = "user@gmail.com")
-        @JsonProperty("providerEmail")
-        val providerEmail: String?,
-
         @Schema(description = "연동 생성 시간", example = "2025-01-09T10:00:00")
         @JsonProperty("createdAt")
         val createdAt: LocalDateTime,
@@ -136,10 +132,6 @@ class OAuthDto {
             @Schema(description = "OAuth 제공업체", example = "google")
             @JsonProperty("provider")
             val provider: String,
-
-            @Schema(description = "OAuth 제공업체 이메일", example = "user@gmail.com")
-            @JsonProperty("providerEmail")
-            val providerEmail: String?,
 
             @Schema(description = "연동 생성 시간", example = "2025-01-09T10:00:00")
             @JsonProperty("createdAt")

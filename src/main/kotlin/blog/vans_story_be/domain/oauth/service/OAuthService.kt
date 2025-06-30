@@ -4,10 +4,7 @@ import blog.vans_story_be.domain.auth.jwt.JwtProvider
 import blog.vans_story_be.domain.oauth.dto.OAuthDto
 import blog.vans_story_be.domain.oauth.mapper.OAuthMapper
 import blog.vans_story_be.domain.oauth.repository.OAuthRepository
-import blog.vans_story_be.domain.user.dto.UserDto
 import blog.vans_story_be.domain.user.entity.User
-import blog.vans_story_be.domain.user.service.UserService
-import blog.vans_story_be.domain.user.repository.UserRepository
 import blog.vans_story_be.global.exception.CustomException
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletResponse
@@ -24,9 +21,13 @@ import java.util.concurrent.ConcurrentHashMap
  * OAuth 관련 비즈니스 로직을 처리하는 서비스
  *
  * 주요 기능:
- * - OAuth 로그인 처리
+ * - OAuth 로그인 처리 (기존 연동된 계정만 가능)
  * - OAuth 계정 연결/해제
  * - 연결된 계정 조회
+ *
+ * 참고: 
+ * - OAuth 로그인은 사전에 link를 통해 연동을 완료한 계정만 가능합니다.
+ * - 새로운 OAuth 계정으로 자동 가입은 지원하지 않습니다.
  *
  * @author vans
  * @version 1.0.0
@@ -36,8 +37,6 @@ import java.util.concurrent.ConcurrentHashMap
 @Transactional
 class OAuthService(
     private val oauthRepository: OAuthRepository,
-    private val userService: UserService,
-    private val userRepository: UserRepository,
     private val oauthMapper: OAuthMapper,
     private val jwtProvider: JwtProvider
 ) {
@@ -108,18 +107,11 @@ class OAuthService(
         val existingOAuth = oauthRepository.findByProviderAndProviderId(
             tempCodeData.provider, 
             tempCodeData.providerId
-        )
+        ) ?: throw CustomException("연동되지 않은 OAuth 계정입니다. 먼저 기존 계정에 OAuth 연동을 설정해주세요.")
 
-        val user = if (existingOAuth != null) {
-            // 기존 OAuth 계정이 있는 경우
-            logger.info { "기존 OAuth 계정으로 로그인 - userId: ${existingOAuth.userId.value}" }
-            existingOAuth.user
-        } else {
-            // 새로운 OAuth 계정인 경우 사용자 생성 후 연동
-            logger.info { "새로운 OAuth 계정 - 사용자 생성 및 연동 시작" }
-            val loginRequest = OAuthDto.LoginRequest(tempCodeData.provider, tempCodeData.providerId)
-            createUserAndLinkOAuth(loginRequest)
-        }
+        // 기존 OAuth 계정으로 로그인
+        logger.info { "기존 OAuth 계정으로 로그인 - userId: ${existingOAuth.userId.value}" }
+        val user = existingOAuth.user
 
         // JWT 토큰 발급
         generateAndSetTokens(user, response)
@@ -147,8 +139,7 @@ class OAuthService(
         val userOAuth = oauthRepository.save(
             userId = userId,
             provider = linkRequest.provider,
-            providerId = linkRequest.providerId,
-            providerEmail = null
+            providerId = linkRequest.providerId
         )
 
         logger.info { "OAuth 계정 연결 완료 - oauthId: ${userOAuth.id}" }
@@ -186,38 +177,7 @@ class OAuthService(
         return oauthMapper.toLinkedAccountsResponse(oauthAccounts)
     }
 
-    /**
-     * 새로운 사용자를 생성하고 OAuth 계정을 연결합니다.
-     */
-    private fun createUserAndLinkOAuth(loginRequest: OAuthDto.LoginRequest): User {
-        // OAuth 정보를 기반으로 사용자 생성
-        val createRequest = UserDto.CreateRequest(
-            email = "${loginRequest.provider}_${loginRequest.providerId}@oauth.local",
-            password = generateRandomPassword(),
-            nickname = "${loginRequest.provider}_${loginRequest.providerId.take(8)}"
-        )
 
-        val createdUserDto = userService.createUser(createRequest)
-        val createdUser = getUserEntity(createdUserDto.id)
-
-        // OAuth 연동 정보 저장
-        oauthRepository.save(
-            userId = createdUser.id.value,
-            provider = loginRequest.provider,
-            providerId = loginRequest.providerId,
-            providerEmail = null
-        )
-
-        return createdUser
-    }
-
-    /**
-     * 사용자 ID로 User 엔티티를 조회합니다.
-     */
-    private fun getUserEntity(userId: Long): User {
-        return userRepository.findUserById(userId)
-            .orElseThrow { CustomException("사용자를 찾을 수 없습니다") }
-    }
 
     /**
      * JWT 토큰을 생성하고 HTTP 응답에 설정합니다.
@@ -247,12 +207,7 @@ class OAuthService(
             path = "/"
         }
 
-    /**
-     * OAuth 사용자를 위한 랜덤 비밀번호를 생성합니다.
-     */
-    private fun generateRandomPassword(): String {
-        return UUID.randomUUID().toString().replace("-", "").take(16)
-    }
+
 
     /**
      * 임시 인증 코드를 생성합니다.

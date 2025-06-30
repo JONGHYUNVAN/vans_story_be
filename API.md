@@ -154,6 +154,8 @@ Base URL: `/api/v1/oauth`
 
 OAuth 소셜 로그인을 통한 사용자 인증 및 계정 연동을 관리합니다.
 
+**중요**: OAuth 로그인은 사전에 link를 통해 연동을 완료한 계정만 가능합니다. 새로운 OAuth 계정으로 자동 가입은 지원하지 않습니다.
+
 ### 1. OAuth 소셜 로그인 (임시 코드 발급)
 
 OAuth 제공업체를 통해 로그인하고 임시 인증 코드를 발급합니다.
@@ -248,6 +250,15 @@ POST /api/v1/oauth/exchange
   "success": false,
   "data": null,
   "message": "만료된 인증 코드입니다"
+}
+```
+
+#### 실패 응답 (400 Bad Request - 연동되지 않은 계정)
+```json
+{
+  "success": false,
+  "data": null,
+  "message": "연동되지 않은 OAuth 계정입니다. 먼저 기존 계정에 OAuth 연동을 설정해주세요."
 }
 ```
 

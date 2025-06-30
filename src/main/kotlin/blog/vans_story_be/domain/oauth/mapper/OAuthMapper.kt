@@ -32,7 +32,6 @@ class OAuthMapper {
             userId = entity.userId.value,
             provider = entity.provider,
             providerId = entity.providerId,
-            providerEmail = entity.providerEmail,
             createdAt = entity.createdAt,
             updatedAt = entity.updatedAt
         )
@@ -57,7 +56,6 @@ class OAuthMapper {
     fun toLinkedAccount(entity: UserOAuth): OAuthDto.LinkedAccountsResponse.LinkedAccount {
         return OAuthDto.LinkedAccountsResponse.LinkedAccount(
             provider = entity.provider,
-            providerEmail = entity.providerEmail,
             createdAt = entity.createdAt
         )
     }

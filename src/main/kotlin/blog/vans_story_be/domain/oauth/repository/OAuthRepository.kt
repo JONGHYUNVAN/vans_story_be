@@ -22,10 +22,9 @@ interface OAuthRepository {
      * @param userId 사용자 ID
      * @param provider OAuth 제공업체
      * @param providerId OAuth 제공업체 사용자 ID
-     * @param providerEmail OAuth 제공업체 이메일 (선택적)
      * @return 저장된 OAuth 연동 정보
      */
-    fun save(userId: Long, provider: String, providerId: String, providerEmail: String?): UserOAuth
+    fun save(userId: Long, provider: String, providerId: String): UserOAuth
 
     /**
      * Provider와 Provider ID로 OAuth 연동 정보를 조회합니다.
