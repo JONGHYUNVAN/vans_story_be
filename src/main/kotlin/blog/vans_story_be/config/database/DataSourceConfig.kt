@@ -8,14 +8,14 @@ import org.springframework.context.annotation.Configuration
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 import javax.sql.DataSource
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.SchemaUtils
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import blog.vans_story_be.domain.user.entity.Users
 import blog.vans_story_be.domain.oauth.entity.UserOAuths
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 
 @Configuration
 class DataSourceConfig {
@@ -52,6 +52,7 @@ class DataSourceConfig {
             connectionTimeout = 30000
             idleTimeout = 600000
             maxLifetime = 1800000
+            initializationFailTimeout = -1
         }
         
         return HikariDataSource(config)

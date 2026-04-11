@@ -34,7 +34,7 @@ class AuthServiceTest : DescribeSpec({
     val mockResponse = mockk<HttpServletResponse>(relaxed = true)
     
     // 테스트할 서비스 인스턴스
-    val authService = AuthService(mockAuthManager, mockJwtProvider, mockk<ExecutorService>())
+    val authService = AuthService(mockAuthManager, mockJwtProvider, java.util.concurrent.Executors.newSingleThreadExecutor())
     
     describe("login 메서드는") {
         context("유효한 로그인 요청이 주어지면") {

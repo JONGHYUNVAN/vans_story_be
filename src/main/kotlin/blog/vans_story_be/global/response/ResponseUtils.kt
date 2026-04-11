@@ -1,7 +1,7 @@
 package blog.vans_story_be.global.response
 
 import jakarta.servlet.http.HttpServletResponse
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.http.ResponseEntity.BodyBuilder

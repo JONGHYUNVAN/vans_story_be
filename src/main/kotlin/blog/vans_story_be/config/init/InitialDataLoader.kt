@@ -2,12 +2,12 @@ package blog.vans_story_be.config.init
 
 import blog.vans_story_be.domain.user.dto.UserDto
 import blog.vans_story_be.domain.user.service.UserService
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.CommandLineRunner
 import org.springframework.stereotype.Component
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.Database
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import javax.sql.DataSource
 
 /**

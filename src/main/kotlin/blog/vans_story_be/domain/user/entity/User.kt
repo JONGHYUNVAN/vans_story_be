@@ -2,13 +2,11 @@ package blog.vans_story_be.domain.user.entity
 
 import blog.vans_story_be.domain.base.BaseEntity
 import blog.vans_story_be.domain.base.BaseTable
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.LongEntity
-import org.jetbrains.exposed.dao.LongEntityClass
-import org.jetbrains.exposed.sql.Table
-import org.jetbrains.exposed.sql.javatime.datetime
-import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.sql.Column
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.dao.LongEntity
+import org.jetbrains.exposed.v1.dao.LongEntityClass
+import org.jetbrains.exposed.v1.javatime.datetime
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
 import java.time.LocalDateTime
 
 /**

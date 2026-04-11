@@ -2,7 +2,6 @@ package blog.vans_story_be.config.security
 
 import blog.vans_story_be.domain.auth.jwt.JwtFilter
 import blog.vans_story_be.domain.auth.jwt.JwtProvider
-import blog.vans_story_be.domain.user.repository.UserRepository
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.security.authentication.AuthenticationManager
@@ -27,9 +26,8 @@ import org.springframework.web.cors.CorsConfigurationSource
  * - CSRF 보호 비활성화(REST API 특성상)
  *
  * @property jwtProvider JWT 토큰 발급 및 검증을 담당하는 Provider
- * @property userRepository 사용자 정보 조회용 Repository (추후 커스텀 인증 로직에 활용 가능)
  * @property corsConfigurationSource CORS 정책을 제공하는 Bean
- * @constructor JWT Provider, UserRepository, CORS Source를 주입받아 생성
+ * @constructor JWT Provider, CORS Source를 주입받아 생성
  * @author vans
  * @since 2025.06.07
  * @version 1.0.0
@@ -43,10 +41,6 @@ class SecurityConfig(
      * JWT 토큰 발급 및 검증을 담당하는 Provider
      */
     private val jwtProvider: JwtProvider,
-    /**
-     * 사용자 정보 조회용 Repository (추후 커스텀 인증 로직에 활용 가능)
-     */
-    private val userRepository: UserRepository,
     /**
      * CORS 정책을 제공하는 Bean
      */

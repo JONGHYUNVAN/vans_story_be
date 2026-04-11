@@ -2,7 +2,7 @@ package blog.vans_story_be.domain.auth.aspect
 
 import blog.vans_story_be.domain.auth.annotation.RequireApiKey
 import blog.vans_story_be.global.exception.CustomException
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before
 import org.springframework.beans.factory.annotation.Value

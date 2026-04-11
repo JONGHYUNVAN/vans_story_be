@@ -3,11 +3,12 @@ package blog.vans_story_be.domain.oauth.repository
 import blog.vans_story_be.domain.oauth.entity.UserOAuth
 import blog.vans_story_be.domain.oauth.entity.UserOAuths
 import blog.vans_story_be.domain.user.entity.Users
-import mu.KotlinLogging
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
-import org.jetbrains.exposed.sql.transactions.transaction
+import io.github.oshai.kotlinlogging.KotlinLogging
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.and
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.deleteWhere
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 

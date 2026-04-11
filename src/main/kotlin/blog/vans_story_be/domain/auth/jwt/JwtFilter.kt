@@ -3,7 +3,7 @@ package blog.vans_story_be.domain.auth.jwt
 import jakarta.servlet.FilterChain
 import jakarta.servlet.http.HttpServletRequest
 import jakarta.servlet.http.HttpServletResponse
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.util.StringUtils
 import org.springframework.web.filter.OncePerRequestFilter
@@ -44,7 +44,7 @@ class JwtFilter(
     companion object {
         private const val AUTHORIZATION_HEADER = "Authorization"
         private const val BEARER_PREFIX = "Bearer "
-        private val logger = KotlinLogging.logger {}
+        private val log = KotlinLogging.logger {}
     }
 
     /**
@@ -72,11 +72,11 @@ class JwtFilter(
                 if (jwtProvider.validateToken(token)) {
                     val authentication = jwtProvider.getAuthentication(token)
                     SecurityContextHolder.getContext().authentication = authentication
-                    logger.debug { "JWT 토큰 인증 성공: ${authentication.name}" }
+                    log.debug { "JWT 토큰 인증 성공: ${authentication.name}" }
                 }
             }
         } catch (e: Exception) {
-            logger.error("JWT 토큰 처리 중 오류 발생")
+            log.error("JWT 토큰 처리 중 오류 발생")
         }
         
         filterChain.doFilter(request, response)

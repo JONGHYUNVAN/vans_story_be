@@ -3,8 +3,9 @@ package blog.vans_story_be.domain.user.repository
 import blog.vans_story_be.domain.user.entity.Role
 import blog.vans_story_be.domain.user.entity.User
 import blog.vans_story_be.domain.user.entity.Users
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.selectAll
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.stereotype.Repository
 import java.util.Optional
 
@@ -41,7 +42,7 @@ class UserRepositoryImpl : UserRepository {
      * SELECT EXISTS (SELECT 1 FROM users WHERE email = ? LIMIT 1);
      */
     override fun existsByEmail(email: String): Boolean =
-        Users.select { Users.email eq email }.any()
+        Users.selectAll().where { Users.email eq email }.any()
 
     /**
      * 닉네임으로 사용자 존재 여부 확인
@@ -51,7 +52,7 @@ class UserRepositoryImpl : UserRepository {
      * SELECT EXISTS (SELECT 1 FROM users WHERE nickname = ? LIMIT 1);
      */
     override fun existsByNickname(nickname: String): Boolean =
-        Users.select { Users.nickname eq nickname }.any()
+        Users.selectAll().where { Users.nickname eq nickname }.any()
 
     /**
      * 사용자 저장(업데이트)

@@ -1,13 +1,7 @@
 package blog.vans_story_be.domain.user.repository
 
 import blog.vans_story_be.domain.user.entity.User
-import blog.vans_story_be.domain.user.entity.Users
 import blog.vans_story_be.domain.user.entity.Role
-import org.jetbrains.exposed.sql.transactions.transaction
-import org.jetbrains.exposed.sql.select
-import org.jetbrains.exposed.sql.and
-import org.jetbrains.exposed.sql.selectAll
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.springframework.stereotype.Repository
 import java.util.Optional
 

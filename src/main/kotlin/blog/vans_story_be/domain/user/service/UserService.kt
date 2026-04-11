@@ -6,10 +6,10 @@ import blog.vans_story_be.domain.user.entity.User
 import blog.vans_story_be.domain.user.mapper.UserMapper
 import blog.vans_story_be.domain.user.repository.UserRepository
 import blog.vans_story_be.global.exception.CustomException
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Service
-import org.jetbrains.exposed.sql.transactions.transaction
+import org.springframework.transaction.annotation.Transactional
 
 /**
  * 사용자 관련 비즈니스 로직을 처리하는 서비스 클래스
@@ -42,6 +42,7 @@ import org.jetbrains.exposed.sql.transactions.transaction
  * @since 2024.03.19
  */
 @Service
+@Transactional
 class UserService(
     private val userRepository: UserRepository,
     private val userMapper: UserMapper,
@@ -72,7 +73,7 @@ class UserService(
      * userService.updateRole(user.id, Role.ADMIN)
      * ```
      */
-    fun createUser(request: UserDto.CreateRequest): UserDto.Response = transaction {
+    fun createUser(request: UserDto.CreateRequest): UserDto.Response {
         // 이메일 중복 체크
         if (userRepository.existsByEmail(request.email)) {
             throw CustomException("이미 존재하는 이메일입니다")
@@ -84,14 +85,14 @@ class UserService(
         }
 
         // 비밀번호 암호화
-        val encodedPassword = passwordEncoder.encode(request.password)
+        val encodedPassword = passwordEncoder.encode(request.password)!!
 
         // 엔티티 생성 및 저장
         val user = userMapper.toEntity(request, encodedPassword)
         userRepository.save(user)
 
         log.info { "사용자 계정 생성 완료: id=${user.id}, email=${user.email}" }
-        userMapper.toResponseDto(user)
+        return userMapper.toResponseDto(user)
     }
 
     /**
@@ -111,7 +112,7 @@ class UserService(
      * val admin = userService.createAdmin(adminRequest)
      * ```
      */
-    fun createAdmin(request: UserDto.CreateRequest): UserDto.Response = transaction {
+    fun createAdmin(request: UserDto.CreateRequest): UserDto.Response {
         // 이메일 중복 체크
         if (userRepository.existsByEmail(request.email)) {
             throw CustomException("이미 존재하는 이메일입니다")
@@ -123,7 +124,7 @@ class UserService(
         }
 
         // 비밀번호 암호화
-        val encodedPassword = passwordEncoder.encode(request.password)
+        val encodedPassword = passwordEncoder.encode(request.password)!!
 
         // 관리자 엔티티 생성
         val user = User.new {
@@ -135,7 +136,7 @@ class UserService(
         userRepository.save(user)
 
         log.info { "관리자 계정 생성 완료: id=${user.id}, email=${user.email}" }
-        userMapper.toResponseDto(user)
+        return userMapper.toResponseDto(user)
     }
 
     /**
@@ -192,7 +193,7 @@ class UserService(
      * val updatedUser = userService.updateUser(1L, updateRequest)
      * ```
      */
-    fun updateUser(id: Long, request: UserDto.UpdateRequest): UserDto.Response = transaction {
+    fun updateUser(id: Long, request: UserDto.UpdateRequest): UserDto.Response {
         val user = userRepository.findUserById(id)
             .orElseThrow { CustomException("사용자를 찾을 수 없습니다") }
 
@@ -220,7 +221,7 @@ class UserService(
         userRepository.save(user)
 
         log.info { "사용자 정보 수정 완료: id=$id" }
-        userMapper.toResponseDto(user)
+        return userMapper.toResponseDto(user)
     }
 
     /**
@@ -234,7 +235,7 @@ class UserService(
      * userService.deleteUser(1L)
      * ```
      */
-    fun deleteUser(id: Long) = transaction {
+    fun deleteUser(id: Long) {
         val user = userRepository.findUserById(id)
             .orElseThrow { CustomException("사용자를 찾을 수 없습니다") }
         userRepository.delete(user)
@@ -287,19 +288,19 @@ class UserService(
      * @throws CustomException 사용자를 찾을 수 없는 경우
      * @throws IllegalArgumentException 비밀번호가 비어있는 경우
      */
-    fun updatePassword(id: Long, newPassword: String) = transaction {
+    fun updatePassword(id: Long, newPassword: String) {
         require(newPassword.isNotBlank()) { "비밀번호는 비어있을 수 없습니다" }
-        
+
         val user = userRepository.findUserById(id)
             .orElseThrow { CustomException("사용자를 찾을 수 없습니다") }
-        
+
         val updateDto = userMapper.toUpdateDto(
             entity = user,
             password = passwordEncoder.encode(newPassword)
         )
         userMapper.updateEntity(updateDto, user)
         userRepository.save(user)
-        
+
         log.info { "사용자 비밀번호 업데이트: id=$id" }
     }
 
@@ -310,17 +311,17 @@ class UserService(
      * @param newRole 새로운 역할
      * @throws CustomException 사용자를 찾을 수 없는 경우
      */
-    fun updateRole(id: Long, newRole: Role) = transaction {
+    fun updateRole(id: Long, newRole: Role) {
         val user = userRepository.findUserById(id)
             .orElseThrow { CustomException("사용자를 찾을 수 없습니다") }
-        
+
         val updateDto = userMapper.toUpdateDto(
             entity = user,
             role = newRole
         )
         userMapper.updateEntity(updateDto, user)
         userRepository.save(user)
-        
+
         log.info { "사용자 역할 업데이트: id=$id, role=$newRole" }
     }
 } 

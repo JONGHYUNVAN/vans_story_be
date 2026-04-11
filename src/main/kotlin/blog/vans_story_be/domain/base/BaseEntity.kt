@@ -1,9 +1,9 @@
 package blog.vans_story_be.domain.base
 
-import org.jetbrains.exposed.dao.Entity
-import org.jetbrains.exposed.dao.id.EntityID
-import org.jetbrains.exposed.dao.id.LongIdTable
-import org.jetbrains.exposed.sql.javatime.datetime
+import org.jetbrains.exposed.v1.dao.Entity
+import org.jetbrains.exposed.v1.core.dao.id.EntityID
+import org.jetbrains.exposed.v1.core.dao.id.LongIdTable
+import org.jetbrains.exposed.v1.javatime.datetime
 import java.time.LocalDateTime
 
 /**

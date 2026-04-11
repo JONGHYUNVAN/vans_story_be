@@ -3,8 +3,8 @@ package blog.vans_story_be.config.security
 import blog.vans_story_be.domain.user.entity.User
 import blog.vans_story_be.domain.user.repository.UserRepository
 import blog.vans_story_be.global.exception.CustomException
-import mu.KotlinLogging
-import org.jetbrains.exposed.sql.transactions.transaction
+import io.github.oshai.kotlinlogging.KotlinLogging
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.security.core.userdetails.UserDetailsService

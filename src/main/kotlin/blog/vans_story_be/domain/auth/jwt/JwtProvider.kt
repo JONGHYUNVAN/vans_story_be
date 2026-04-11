@@ -4,7 +4,7 @@ import io.jsonwebtoken.*
 import io.jsonwebtoken.security.Keys
 import io.jsonwebtoken.security.SecurityException
 import jakarta.annotation.PostConstruct
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.GrantedAuthority
@@ -91,7 +91,7 @@ class JwtProvider(
      * @return 생성된 JWT 토큰
      */
     private fun generateToken(authentication: Authentication, validityInSeconds: Long): String {
-        val authorities = authentication.authorities.joinToString(",") { it.authority }
+        val authorities = authentication.authorities.joinToString(",") { it.authority.orEmpty() }
         val now = Date()
         val validity = Date(now.time + validityInSeconds * 1000)
 

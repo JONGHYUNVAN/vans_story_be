@@ -8,7 +8,7 @@ import blog.vans_story_be.domain.user.entity.User
 import blog.vans_story_be.global.exception.CustomException
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletResponse
-import mu.KotlinLogging
+import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.stereotype.Service

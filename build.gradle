@@ -1,13 +1,12 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    id 'org.springframework.boot' version '3.5.0'
-    id 'io.spring.dependency-management' version '1.1.4'
-    id 'org.jetbrains.kotlin.jvm' version '1.9.22'
-    id 'org.jetbrains.kotlin.plugin.spring' version '1.9.22'
-    id 'org.jetbrains.kotlin.plugin.jpa' version '1.9.22'
-    id 'org.jetbrains.kotlin.kapt' version '1.9.22'
-    id 'org.jetbrains.dokka' version '2.0.0'
+    id 'org.springframework.boot' version '4.0.5'
+    id 'org.jetbrains.kotlin.jvm' version '2.2.21'
+    id 'org.jetbrains.kotlin.plugin.spring' version '2.2.21'
+    id 'org.jetbrains.kotlin.plugin.jpa' version '2.2.21'
+    id 'org.jetbrains.kotlin.kapt' version '2.2.21'
+    id 'org.jetbrains.dokka' version '2.2.0'
     // === OpenAPI 문서 생성 플러그인 ===
     id 'org.springdoc.openapi-gradle-plugin' version '1.9.0'
 }
@@ -29,12 +28,16 @@ repositories {
     mavenCentral()
     google()
     maven { url = uri("https://jitpack.io") }
+    maven { url = uri("https://repo.spring.io/milestone") }
+    maven { url = uri("https://repo.spring.io/snapshot") }
 }
 
 dependencies {
+    // === Spring Boot BOM (Gradle 네이티브 플랫폼 방식) ===
+    implementation platform("org.springframework.boot:spring-boot-dependencies:4.0.5")
+
     // === Kotlin ===
     implementation 'org.jetbrains.kotlin:kotlin-reflect'
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-reactor'
     
@@ -43,55 +46,57 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
-    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    // === AOP (SB4-M3에서 spring-boot-starter-aop 미제공 → 직접 의존성) ===
+    implementation 'org.springframework:spring-aop'
+    implementation 'org.aspectj:aspectjweaver'
     
     // === Jackson Kotlin 지원 ===
     implementation 'com.fasterxml.jackson.module:jackson-module-kotlin'
     
     // === Exposed ===
-    implementation 'org.jetbrains.exposed:exposed-core:0.45.0'
-    implementation 'org.jetbrains.exposed:exposed-dao:0.45.0'
-    implementation 'org.jetbrains.exposed:exposed-java-time:0.45.0'
-    implementation 'org.jetbrains.exposed:exposed-spring-boot-starter:0.45.0'
+    implementation 'org.jetbrains.exposed:exposed-core:1.2.0'
+    implementation 'org.jetbrains.exposed:exposed-dao:1.2.0'
+    implementation 'org.jetbrains.exposed:exposed-java-time:1.2.0'
+    implementation 'org.jetbrains.exposed:exposed-spring-boot4-starter:1.2.0'
     
     // === MapStruct ===
-    implementation 'org.mapstruct:mapstruct:1.5.5.Final'
+    implementation 'org.mapstruct:mapstruct:1.6.3'
     
     // === JWT ===
-    implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
-    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
-    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
+    implementation 'io.jsonwebtoken:jjwt-api:0.13.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.13.0'
+    runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.13.0'
     
     // === 데이터베이스 ===
-    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client:3.3.3'
-    
+    runtimeOnly 'org.mariadb.jdbc:mariadb-java-client:3.5.8'
+
     // === API 문서화 ===
-    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.3.0'
-    
+    implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.2'
+
     // === 로깅 ===
-    implementation 'io.github.microutils:kotlin-logging-jvm:3.0.5'
+    implementation 'io.github.oshai:kotlin-logging-jvm:6.0.9'
     
     // === 환경변수 관리 ===
-    implementation 'me.paulschwarz:spring-dotenv:2.5.4'
+    implementation 'me.paulschwarz:springboot4-dotenv:5.1.0'
     
     // === 테스트 ===
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testImplementation 'io.kotest:kotest-runner-junit5:5.8.0'
-    testImplementation 'io.mockk:mockk:1.13.9'
+    testImplementation 'io.kotest:kotest-runner-junit5:6.1.10'
+    testImplementation 'io.mockk:mockk:1.14.9'
     testRuntimeOnly 'com.h2database:h2'
 }
 
 // === Kotlin 컴파일 설정 ===
 tasks.withType(KotlinCompile).configureEach {
-    kotlinOptions {
-        jvmTarget = '21'
-        apiVersion = '1.9'
-        languageVersion = '1.9'
-        freeCompilerArgs += [
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21
+        apiVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
+        languageVersion = org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_2
+        freeCompilerArgs.addAll([
             '-Xjsr305=strict',
             '-Xjvm-default=all',
             '-opt-in=kotlin.RequiresOptIn'
-        ]
+        ])
     }
 }
 
@@ -105,6 +110,8 @@ tasks.withType(Test).configureEach {
 
 // === Kapt 설정 ===
 kapt {
+    useBuildCache = true
+    correctErrorTypes = true
     javacOptions {
         option("-source", "21")
         option("-target", "21")
@@ -113,7 +120,7 @@ kapt {
 
 // === 애플리케이션 실행 설정 ===
 bootRun {
-    jvmArgs = ['-Dfile.encoding=UTF-8', '-Dconsole.encoding=UTF-8', '-Dspring.profiles.active=dev']
+    jvmArgs = ['-Dfile.encoding=UTF-8', '-Dconsole.encoding=UTF-8', '-Dstdout.encoding=UTF-8', '-Dstderr.encoding=UTF-8', '-Dspring.profiles.active=dev']
 }
 
 // === JAR 빌드 최적화 (cloudtype 배포용) ===
