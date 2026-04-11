@@ -1,6 +1,7 @@
 package blog.vans_story_be.domain.auth.service
 
 import blog.vans_story_be.domain.auth.dto.LoginRequest
+import blog.vans_story_be.domain.auth.dto.toLogString
 import blog.vans_story_be.domain.auth.jwt.JwtProperties
 import blog.vans_story_be.domain.auth.jwt.JwtProvider
 import blog.vans_story_be.domain.auth.repository.RefreshTokenRepository
@@ -59,7 +60,7 @@ class AuthService(
             val cause = if (e is ExecutionException) e.cause ?: e else e
             throw when (cause) {
                 is BadCredentialsException -> {
-                    logger.warn { "인증 실패 - 잘못된 자격 증명: ${maskEmail(loginRequest.email)}" }
+                    logger.warn { "인증 실패 - 잘못된 자격 증명: ${loginRequest.toLogString()}" }
                     CustomException("이메일 또는 비밀번호가 올바르지 않습니다.")
                 }
                 else -> {
@@ -116,7 +117,7 @@ class AuthService(
     // ── Private helpers ────────────────────────────────────────────────────────
 
     private fun authenticateUser(loginRequest: LoginRequest): Authentication {
-        logger.info { "인증 시작: ${maskEmail(loginRequest.email)}" }
+        logger.info { "인증 시작: ${loginRequest.toLogString()}" }
         val token = UsernamePasswordAuthenticationToken(loginRequest.email, loginRequest.password)
         return authenticationManager.authenticate(token)
     }

@@ -26,11 +26,6 @@ import jakarta.validation.constraints.Size
  *     password = "Password1!"
  * )
  * 
- * // 유효성 검사
- * if (loginRequest.isValid()) {
- *     // 로그인 처리
- * }
- * 
  * // 컨트롤러에서 사용
  * @PostMapping("/login")
  * fun login(@Valid @RequestBody request: LoginRequest): ResponseEntity<TokenResponse> {
@@ -95,52 +90,7 @@ data class LoginRequest(
         message = "비밀번호는 영문, 숫자, 특수문자를 포함해야 합니다."
     )
     val password: String
-) {
-    companion object {
-        private const val MIN_PASSWORD_LENGTH = 8
-        private val PASSWORD_PATTERN = Regex("^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%*#?&])[A-Za-z\\d@$!%*#?&]{8,}$")
-    }
-
-    /**
-     * 로그인 요청의 유효성을 검사합니다.
-     * 
-     * <p>이메일 형식과 비밀번호 복잡성을 검증합니다.</p>
-     * 
-     * @return 유효성 검사 결과
-     */
-    fun isValid(): Boolean = 
-        email.isNotBlank() && 
-        email.matches(Regex("^[A-Za-z0-9+_.-]+@(.+)\$")) &&
-        password.length >= MIN_PASSWORD_LENGTH &&
-        password.matches(PASSWORD_PATTERN)
-
-    /**
-     * 로그인 요청의 유효성을 검사하고 결과를 반환합니다.
-     * 
-     * <p>유효성 검사 실패 시 실패 원인을 포함한 결과를 반환합니다.</p>
-     * 
-     * @return 유효성 검사 결과와 실패 메시지
-     */
-    fun validate(): ValidationResult = when {
-        email.isBlank() -> ValidationResult.Invalid("이메일은 필수입니다.")
-        !email.matches(Regex("^[A-Za-z0-9+_.-]+@(.+)\$")) -> 
-            ValidationResult.Invalid("유효한 이메일 형식이어야 합니다.")
-        password.isBlank() -> ValidationResult.Invalid("비밀번호는 필수입니다.")
-        password.length < MIN_PASSWORD_LENGTH -> 
-            ValidationResult.Invalid("비밀번호는 8자 이상이어야 합니다.")
-        !password.matches(PASSWORD_PATTERN) -> 
-            ValidationResult.Invalid("비밀번호는 영문, 숫자, 특수문자를 포함해야 합니다.")
-        else -> ValidationResult.Valid
-    }
-}
-
-/**
- * 유효성 검사 결과를 나타내는 sealed 클래스입니다.
- */
-sealed class ValidationResult {
-    object Valid : ValidationResult()
-    data class Invalid(val message: String) : ValidationResult()
-}
+)
 
 /**
  * LoginRequest의 확장 함수들입니다.

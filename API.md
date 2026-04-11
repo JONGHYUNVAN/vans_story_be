@@ -2,12 +2,15 @@
 
 ## 목차
 - [개요](#개요)
+- [기술 스택](#기술-스택)
 - [공통 응답 형식](#공통-응답-형식)
 - [인증 API](#인증-api)
 - [OAuth API](#oauth-api)
 - [사용자 API](#사용자-api)
 - [에러 코드](#에러-코드)
 - [예제 코드](#예제-코드)
+
+---
 
 ## 개요
 
@@ -23,6 +26,38 @@
 - **Token 만료 시간**:
   - Access Token: 5시간 (18000초)
   - Refresh Token: 7일 (604800초)
+
+### 인증 불필요 (Public) 엔드포인트
+| 경로 | 메서드 |
+|------|--------|
+| `/api/v1/auth/signup` | POST |
+| `/api/v1/auth/login` | POST |
+| `/api/v1/auth/refresh` | POST |
+| `/api/v1/auth/logout` | POST |
+| `/api/v1/oauth/login` | POST |
+| `/api/v1/oauth/exchange` | POST |
+| `/swagger-ui/**` | GET (비프로덕션 환경만) |
+| `/v3/api-docs/**` | GET (비프로덕션 환경만) |
+
+> 위 목록 외 모든 엔드포인트는 **유효한 Access Token** 필요
+
+### Rate Limiting
+로그인 및 회원가입 엔드포인트에 레이트 리밋이 적용됩니다. 단기간 과도한 요청 시 `429 Too Many Requests`가 반환될 수 있습니다.
+
+---
+
+## 기술 스택
+
+| 항목 | 버전 |
+|------|------|
+| Spring Boot | 4.0.5 |
+| Kotlin | 2.2.21 |
+| JVM | 21 |
+| Exposed ORM | 1.2.0 |
+| MariaDB Driver | 3.5.8 |
+| springdoc OpenAPI | 3.0.2 |
+
+---
 
 ## 공통 응답 형식
 
@@ -41,13 +76,66 @@
 |------|------|------|
 | `success` | boolean | API 호출 성공 여부 |
 | `data` | T | 응답 데이터 (성공 시에만 포함) |
-| `message` | string | 에러 메시지 (실패 시에만 포함) |
+| `message` | string\|null | 에러 메시지 (실패 시에만 포함) |
+
+---
 
 ## 인증 API
 
 Base URL: `/api/v1/auth`
 
-### 1. 로그인
+### 1. 회원가입
+
+새로운 사용자를 등록합니다.
+
+```http
+POST /api/v1/auth/signup
+```
+
+#### 요청 본문
+```json
+{
+  "email": "user@example.com",
+  "password": "Password1!",
+  "nickname": "길동이"
+}
+```
+
+#### 요청 필드 검증
+| 필드 | 타입 | 필수 | 제약 조건 |
+|------|------|------|----------|
+| `email` | string | ✅ | 유효한 이메일 형식 |
+| `password` | string | ✅ | 8자 이상, 영문/숫자/특수문자 조합 |
+| `nickname` | string | ✅ | 2~50자 |
+
+#### 성공 응답 (201 Created)
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "email": "user@example.com",
+    "nickname": "길동이",
+    "role": "USER",
+    "createdAt": "2025-01-09 10:00:00",
+    "updatedAt": "2025-01-09 10:00:00"
+  },
+  "message": null
+}
+```
+
+#### 실패 응답 (409 Conflict - 이메일 중복)
+```json
+{
+  "success": false,
+  "data": null,
+  "message": "이미 사용 중인 이메일입니다"
+}
+```
+
+---
+
+### 2. 로그인
 
 사용자 인증을 처리하고 JWT 토큰을 발급합니다.
 
@@ -95,7 +183,7 @@ POST /api/v1/auth/login
 
 ---
 
-### 2. 토큰 갱신
+### 3. 토큰 갱신
 
 Refresh Token을 사용하여 새로운 Access Token을 발급합니다.
 
@@ -132,13 +220,16 @@ POST /api/v1/auth/refresh
 
 ---
 
-### 3. 로그아웃
+### 4. 로그아웃
 
 사용자 로그아웃을 처리하고 Refresh Token을 만료시킵니다.
 
 ```http
 POST /api/v1/auth/logout
 ```
+
+#### 요청 조건
+- **쿠키**: `refreshToken=<refresh_token>` (optional)
 
 #### 성공 응답 (204 No Content)
 - 응답 본문 없음
@@ -154,7 +245,7 @@ Base URL: `/api/v1/oauth`
 
 OAuth 소셜 로그인을 통한 사용자 인증 및 계정 연동을 관리합니다.
 
-**중요**: OAuth 로그인은 사전에 link를 통해 연동을 완료한 계정만 가능합니다. 새로운 OAuth 계정으로 자동 가입은 지원하지 않습니다.
+> **중요**: OAuth 로그인은 사전에 `/api/v1/oauth/link`를 통해 연동을 완료한 계정만 가능합니다. 새로운 OAuth 계정으로 자동 가입은 지원하지 않습니다.
 
 ### 1. OAuth 소셜 로그인 (임시 코드 발급)
 
@@ -189,12 +280,12 @@ POST /api/v1/oauth/login
 }
 ```
 
-#### 실패 응답 (400 Bad Request)
+#### 실패 응답 (400 Bad Request - 연동되지 않은 계정)
 ```json
 {
   "success": false,
   "data": null,
-  "message": "OAuth 제공업체는 필수입니다"
+  "message": "연동되지 않은 OAuth 계정입니다. 먼저 기존 계정에 OAuth 연동을 설정해주세요."
 }
 ```
 
@@ -235,7 +326,7 @@ POST /api/v1/oauth/exchange
 **응답 쿠키:**
 - `refreshToken=eyJhbGciOiJIUzI1NiIs...; HttpOnly; Secure; Path=/`
 
-#### 실패 응답 (400 Bad Request)
+#### 실패 응답 (400 Bad Request - 유효하지 않은 코드)
 ```json
 {
   "success": false,
@@ -244,21 +335,12 @@ POST /api/v1/oauth/exchange
 }
 ```
 
-#### 실패 응답 (401 Unauthorized)
+#### 실패 응답 (401 Unauthorized - 만료된 코드)
 ```json
 {
   "success": false,
   "data": null,
   "message": "만료된 인증 코드입니다"
-}
-```
-
-#### 실패 응답 (400 Bad Request - 연동되지 않은 계정)
-```json
-{
-  "success": false,
-  "data": null,
-  "message": "연동되지 않은 OAuth 계정입니다. 먼저 기존 계정에 OAuth 연동을 설정해주세요."
 }
 ```
 
@@ -296,13 +378,22 @@ Authorization: Bearer <access_token>
     "userId": 123,
     "provider": "kakao",
     "providerId": "kakao_user_67890",
-    "providerEmail": null,
     "createdAt": "2025-01-09T10:30:00",
     "updatedAt": "2025-01-09T10:30:00"
   },
   "message": null
 }
 ```
+
+#### 응답 필드
+| 필드 | 타입 | 설명 |
+|------|------|------|
+| `id` | number | OAuth 연동 ID |
+| `userId` | number | 사용자 ID |
+| `provider` | string | OAuth 제공업체명 |
+| `providerId` | string | OAuth 제공업체 사용자 ID |
+| `createdAt` | string | 연동 생성 시간 (ISO 8601) |
+| `updatedAt` | string | 연동 수정 시간 (ISO 8601) |
 
 #### 실패 응답 (409 Conflict)
 ```json
@@ -373,12 +464,10 @@ Authorization: Bearer <access_token>
     "linkedAccounts": [
       {
         "provider": "google",
-        "providerEmail": null,
         "createdAt": "2025-01-08T15:20:00"
       },
       {
         "provider": "kakao",
-        "providerEmail": null,
         "createdAt": "2025-01-09T10:30:00"
       }
     ]
@@ -392,8 +481,7 @@ Authorization: Bearer <access_token>
 |------|------|------|
 | `linkedAccounts` | array | 연결된 OAuth 계정 목록 |
 | `provider` | string | OAuth 제공업체명 |
-| `providerEmail` | string\|null | OAuth 제공업체 이메일 (현재 미사용) |
-| `createdAt` | string | 연결 생성 시간 (ISO 8601 형식) |
+| `createdAt` | string | 연결 생성 시간 (ISO 8601) |
 
 ---
 
@@ -403,12 +491,14 @@ Base URL: `/api/v1/users`
 
 ### 1. 사용자 목록 조회
 
-모든 사용자 목록을 조회합니다. (관리자만 접근 가능)
+모든 사용자 목록을 조회합니다.
 
 ```http
 GET /api/v1/users
 Authorization: Bearer <access_token>
 ```
+
+> **권한**: ADMIN 전용
 
 #### 성공 응답 (200 OK)
 ```json
@@ -417,7 +507,6 @@ Authorization: Bearer <access_token>
   "data": [
     {
       "id": 1,
-      "name": "홍길동",
       "email": "user1@example.com",
       "nickname": "길동이",
       "role": "USER",
@@ -426,9 +515,8 @@ Authorization: Bearer <access_token>
     },
     {
       "id": 2,
-      "name": "김철수",
       "email": "admin@example.com",
-      "nickname": "철수",
+      "nickname": "관리자",
       "role": "ADMIN",
       "createdAt": "2024-03-18 09:00:00",
       "updatedAt": "2024-03-18 09:00:00"
@@ -442,7 +530,7 @@ Authorization: Bearer <access_token>
 
 ### 2. 사용자 생성
 
-새로운 사용자를 생성합니다. 
+새로운 사용자를 생성합니다.
 
 ```http
 POST /api/v1/users
@@ -450,10 +538,11 @@ Authorization: Bearer <access_token>
 Content-Type: application/json
 ```
 
+> **권한**: ADMIN 전용
+
 #### 요청 본문
 ```json
 {
-  "name": "홍길동",
   "email": "user@example.com",
   "password": "Password1!",
   "nickname": "길동이"
@@ -465,7 +554,7 @@ Content-Type: application/json
 |------|------|------|----------|
 | `email` | string | ✅ | 유효한 이메일 형식 |
 | `password` | string | ✅ | 8자 이상, 영문/숫자/특수문자 조합 |
-| `nickname` | string | ✅ | 2-50자 |
+| `nickname` | string | ✅ | 2~50자 |
 
 #### 성공 응답 (201 Created)
 ```json
@@ -487,6 +576,8 @@ GET /api/v1/users/{id}
 Authorization: Bearer <access_token>
 ```
 
+> **권한**: ADMIN 또는 본인
+
 #### 경로 매개변수
 | 매개변수 | 타입 | 설명 |
 |----------|------|------|
@@ -498,7 +589,6 @@ Authorization: Bearer <access_token>
   "success": true,
   "data": {
     "id": 1,
-    "name": "홍길동",
     "email": "user@example.com",
     "nickname": "길동이",
     "role": "USER",
@@ -517,6 +607,7 @@ Authorization: Bearer <access_token>
 
 ```http
 GET /api/v1/users/email/{email}
+Authorization: Bearer <access_token>
 ```
 
 #### 경로 매개변수
@@ -537,7 +628,7 @@ GET /api/v1/users/email/{email}
 
 ### 5. 사용자 정보 수정
 
-사용자 정보를 수정합니다. (본인 또는 관리자만 가능)
+사용자 정보를 수정합니다.
 
 ```http
 PATCH /api/v1/users/{id}
@@ -545,7 +636,9 @@ Authorization: Bearer <access_token>
 Content-Type: application/json
 ```
 
-#### 요청 본문
+> **권한**: ADMIN 또는 본인
+
+#### 요청 본문 (모든 필드 선택사항)
 ```json
 {
   "password": "NewPassword1!",
@@ -555,13 +648,13 @@ Content-Type: application/json
 }
 ```
 
-#### 요청 필드 (모든 필드 선택사항)
-| 필드 | 타입 | 제약 조건 |
-|------|------|----------|
-| `password` | string | 8자 이상, 영문/숫자/특수문자 조합 |
-| `email` | string | 유효한 이메일 형식 |
-| `nickname` | string | 2-50자 |
-| `role` | string | "USER" 또는 "ADMIN" |
+#### 요청 필드
+| 필드 | 타입 | 필수 | 제약 조건 |
+|------|------|------|----------|
+| `password` | string | ❌ | 8자 이상, 영문/숫자/특수문자 조합 |
+| `email` | string | ❌ | 유효한 이메일 형식 |
+| `nickname` | string | ❌ | 2~50자 |
+| `role` | string | ❌ | `"USER"` 또는 `"ADMIN"` |
 
 #### 성공 응답 (200 OK)
 ```json
@@ -569,7 +662,6 @@ Content-Type: application/json
   "success": true,
   "data": {
     "id": 1,
-    "name": "홍길동",
     "email": "newemail@example.com",
     "nickname": "새로운닉네임",
     "role": "USER",
@@ -584,12 +676,14 @@ Content-Type: application/json
 
 ### 6. 사용자 삭제
 
-사용자를 삭제합니다. (본인 또는 관리자만 가능)
+사용자를 삭제합니다.
 
 ```http
 DELETE /api/v1/users/{id}
 Authorization: Bearer <access_token>
 ```
+
+> **권한**: ADMIN 또는 본인
 
 #### 성공 응답 (204 No Content)
 - 응답 본문 없음
@@ -609,9 +703,11 @@ Authorization: Bearer <access_token>
 | 401 | 인증 실패 | 토큰 없음 또는 만료 |
 | 403 | 권한 없음 | 접근 권한 부족 |
 | 404 | 찾을 수 없음 | 존재하지 않는 리소스 |
+| 409 | 충돌 | 이미 존재하는 리소스 |
+| 429 | 요청 과다 | Rate Limit 초과 |
 | 500 | 서버 오류 | 내부 서버 에러 |
 
-### 공통 에러 응답
+### 공통 에러 응답 예시
 
 #### 400 Bad Request
 ```json
@@ -649,20 +745,54 @@ Authorization: Bearer <access_token>
 }
 ```
 
+#### 429 Too Many Requests
+```json
+{
+  "success": false,
+  "data": null,
+  "message": "요청이 너무 많습니다. 잠시 후 다시 시도해주세요"
+}
+```
+
 ---
 
 ## 예제 코드
 
 ### cURL
 
+#### 회원가입
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/signup \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "Password1!",
+    "nickname": "길동이"
+  }'
+```
+
 #### 로그인
 ```bash
 curl -X POST http://localhost:8080/api/v1/auth/login \
   -H "Content-Type: application/json" \
+  -c cookies.txt \
   -d '{
     "email": "user@example.com",
     "password": "Password1!"
   }'
+```
+
+#### 토큰 갱신
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/refresh \
+  -b cookies.txt \
+  -c cookies.txt
+```
+
+#### 로그아웃
+```bash
+curl -X POST http://localhost:8080/api/v1/auth/logout \
+  -b cookies.txt
 ```
 
 #### 사용자 목록 조회
@@ -671,13 +801,12 @@ curl -X GET http://localhost:8080/api/v1/users \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-#### 사용자 생성
+#### 사용자 생성 (ADMIN)
 ```bash
 curl -X POST http://localhost:8080/api/v1/users \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
   -d '{
-    "name": "홍길동",
     "email": "user@example.com",
     "password": "Password1!",
     "nickname": "길동이"
@@ -700,6 +829,7 @@ curl -X POST http://localhost:8080/api/v1/oauth/login \
 ```bash
 curl -X POST http://localhost:8080/api/v1/oauth/exchange \
   -H "Content-Type: application/json" \
+  -c cookies.txt \
   -d '{
     "code": "oauth_temp_abc123def456"
   }'
@@ -737,9 +867,25 @@ curl -X GET http://localhost:8080/api/v1/oauth/linked \
 ## 추가 정보
 
 ### Swagger UI
-개발 환경에서는 Swagger UI를 통해 API를 테스트할 수 있습니다:
+비프로덕션 환경에서는 Swagger UI를 통해 API를 테스트할 수 있습니다:
 - **URL**: http://localhost:8080/swagger-ui.html
 
-### 개발 도구
-- **Postman Collection**: 프로젝트 루트의 `postman/` 디렉토리 참조
-- **API 테스트**: `src/test/kotlin/` 디렉토리의 통합 테스트 참조 
+### 패키지 구조
+```
+blog/vans_story_be/
+├── config/
+│   ├── apiLogger/        요청/응답 로깅 인터셉터
+│   ├── cors/             CORS 설정
+│   ├── database/         DataSource, 테이블 초기화
+│   ├── init/             초기 데이터 로더
+│   ├── security/         Spring Security, JWT 필터, Rate Limit
+│   └── swagger/          Swagger/OpenAPI 설정
+├── domain/
+│   ├── auth/             로그인·로그아웃·토큰 갱신·API Key
+│   ├── oauth/            OAuth 연동·해제·조회
+│   └── user/             사용자 CRUD
+└── global/
+    ├── exception/        전역 예외 처리
+    ├── mapper/           공통 매퍼
+    └── response/         공통 응답 래퍼
+```

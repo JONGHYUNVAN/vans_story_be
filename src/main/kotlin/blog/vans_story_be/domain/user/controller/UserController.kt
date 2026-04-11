@@ -3,16 +3,12 @@ package blog.vans_story_be.domain.user.controller
 import blog.vans_story_be.domain.user.dto.UserDto
 import blog.vans_story_be.domain.user.service.UserService
 import blog.vans_story_be.global.response.ApiResponse
-import blog.vans_story_be.global.response.noContent
-import blog.vans_story_be.global.response.withData
 import blog.vans_story_be.global.response.withLogging
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.Parameter
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
-import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.*
@@ -44,7 +40,6 @@ import org.springframework.web.bind.annotation.*
 class UserController(
     private val userService: UserService
 ) {
-    private val logger = KotlinLogging.logger {}
 
     /**
      * 새로운 사용자를 생성합니다.
@@ -58,9 +53,8 @@ class UserController(
     @PreAuthorize("hasRole('ADMIN')")
     fun createUser(
         @Valid @RequestBody request: UserDto.CreateRequest,
-    ): ResponseEntity<ApiResponse<Unit>> = withLogging("사용자 생성") {
+    ): ResponseEntity<ApiResponse<UserDto.Response>> = withLogging("사용자 생성") {
         userService.createUser(request)
-        ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(Unit))
     }
 
     /**
@@ -93,9 +87,9 @@ class UserController(
     )
     @GetMapping
     @PreAuthorize("hasRole('ADMIN')")
-    fun getAllUsers() = withLogging("사용자 목록 조회") {
+    fun getAllUsers(): ResponseEntity<ApiResponse<List<UserDto.Response>>> = withLogging("사용자 목록 조회") {
         userService.getAllUsers()
-    }.withData(userService.getAllUsers())
+    }
 
     /**
      * 특정 ID의 사용자 정보를 조회합니다.
@@ -129,9 +123,9 @@ class UserController(
     fun getUser(
         @Parameter(description = "사용자 ID", required = true)
         @PathVariable id: Long
-    ) = withLogging("사용자 정보 조회") {
+    ): ResponseEntity<ApiResponse<UserDto.Response>> = withLogging("사용자 정보 조회") {
         userService.getUserById(id)
-    }.withData(userService.getUserById(id))
+    }
 
     /**
      * 이메일로 사용자의 닉네임을 조회합니다.
@@ -148,9 +142,9 @@ class UserController(
     fun getNicknameByEmail(
         @Parameter(description = "사용자 이메일", required = true)
         @PathVariable email: String
-    ) = withLogging("이메일로 닉네임 조회") {
+    ): ResponseEntity<ApiResponse<String>> = withLogging("이메일로 닉네임 조회") {
         userService.getNicknameByEmail(email)
-    }.withData(userService.getNicknameByEmail(email))
+    }
 
     /**
      * 사용자 정보를 수정합니다.
@@ -170,9 +164,9 @@ class UserController(
         @Parameter(description = "사용자 ID", required = true)
         @PathVariable id: Long,
         @Valid @RequestBody updateRequest: UserDto.UpdateRequest
-    ) = withLogging("사용자 정보 수정") {
+    ): ResponseEntity<ApiResponse<UserDto.Response>> = withLogging("사용자 정보 수정") {
         userService.updateUser(id, updateRequest)
-    }.withData(userService.updateUser(id, updateRequest))
+    }
 
     /**
      * 사용자를 삭제합니다.
@@ -192,28 +186,9 @@ class UserController(
         @Parameter(description = "사용자 ID", required = true)
         @PathVariable id: Long,
         response: HttpServletResponse
-    ) = withLogging("사용자 삭제") {
+    ): ResponseEntity<ApiResponse<Nothing?>> = withLogging("사용자 삭제") {
         userService.deleteUser(id)
-        response.noContent()
+        null
     }
 
-    /**
-     * 로깅을 포함한 컨트롤러 메서드 실행을 위한 확장 함수
-     *
-     * @param operation 수행할 작업의 이름
-     * @param block 실행할 코드 블록
-     * @return API 응답
-     */
-    private inline fun <T> withLogging(
-        operation: String,
-        block: () -> T
-    ): ResponseEntity<ApiResponse<T>> = try {
-        logger.info { "[$operation] 시작" }
-        val result = block()
-        logger.info { "[$operation] 완료" }
-        ResponseEntity.ok(ApiResponse.success(result))
-    } catch (e: Exception) {
-        logger.error(e) { "[$operation] 실패" }
-        throw e
-    }
 } 

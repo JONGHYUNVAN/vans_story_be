@@ -84,10 +84,10 @@ sealed class UserDto {
         val password: String? = null,
 
         @field:Email(message = "올바른 이메일 형식이 아닙니다")
-        val email: String = "",
+        val email: String? = null,
 
         @field:Size(min = 2, max = 50, message = "닉네임은 2자 이상 50자 이하여야 합니다")
-        val nickname: String = "",
+        val nickname: String? = null,
 
         val role: Role? = null
     )

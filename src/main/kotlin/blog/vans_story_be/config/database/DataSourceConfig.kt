@@ -21,7 +21,7 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 @Configuration
 class DataSourceConfig {
 
-    private val log = KotlinLogging.logger {}
+    private val logger = KotlinLogging.logger {}
 
     @Value("\${VANS_BLOG_DB_HOST:localhost}")
     private lateinit var dbHost: String
@@ -77,12 +77,12 @@ class DataSourceConfig {
         runCatching {
             Database.connect(dataSource())
             transaction {
-                log.info { "데이터베이스 테이블 생성 시작..." }
+                logger.info { "데이터베이스 테이블 생성 시작..." }
                 SchemaUtils.create(Users, UserOAuths, RefreshTokens)
-                log.info { "데이터베이스 테이블 생성 완료!" }
+                logger.info { "데이터베이스 테이블 생성 완료!" }
             }
         }.onFailure { e ->
-            log.error(e) { "테이블 생성 중 오류 발생: ${e.message}" }
+            logger.error(e) { "테이블 생성 중 오류 발생: ${e.message}" }
         }
     }
 } 

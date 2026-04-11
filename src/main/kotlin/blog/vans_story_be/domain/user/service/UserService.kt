@@ -48,9 +48,7 @@ class UserService(
     private val userMapper: UserMapper,
     private val passwordEncoder: PasswordEncoder
 ) {
-    companion object {
-        private val log = KotlinLogging.logger {}
-    }
+    private val logger = KotlinLogging.logger {}
 
     /**
      * 일반 사용자 계정을 생성합니다.
@@ -91,7 +89,7 @@ class UserService(
         val user = userMapper.toEntity(request, encodedPassword)
         userRepository.save(user)
 
-        log.info { "사용자 계정 생성 완료: id=${user.id}, email=${user.email}" }
+        logger.info { "사용자 계정 생성 완료: id=${user.id}, email=${user.email}" }
         return userMapper.toResponseDto(user)
     }
 
@@ -135,7 +133,7 @@ class UserService(
         }
         userRepository.save(user)
 
-        log.info { "관리자 계정 생성 완료: id=${user.id}, email=${user.email}" }
+        logger.info { "관리자 계정 생성 완료: id=${user.id}, email=${user.email}" }
         return userMapper.toResponseDto(user)
     }
 
@@ -155,7 +153,7 @@ class UserService(
     fun getAllUsers(): List<UserDto.Response> =
         userRepository.findAllUsers()
             .map(userMapper::toResponseDto)
-            .also { log.debug { "전체 사용자 조회 완료: ${it.size}명" } }
+            .also { logger.debug { "전체 사용자 조회 완료: ${it.size}명" } }
 
     /**
      * ID로 사용자를 조회합니다.
@@ -174,7 +172,7 @@ class UserService(
         userRepository.findUserById(id)
             .map(userMapper::toResponseDto)
             .orElseThrow { CustomException("사용자를 찾을 수 없습니다") }
-            .also { log.debug { "사용자 조회 완료: id=$id" } }
+            .also { logger.debug { "사용자 조회 완료: id=$id" } }
 
     /**
      * 사용자 정보를 수정합니다.
@@ -220,7 +218,7 @@ class UserService(
         userMapper.updateEntity(updateDto, user)
         userRepository.save(user)
 
-        log.info { "사용자 정보 수정 완료: id=$id" }
+        logger.info { "사용자 정보 수정 완료: id=$id" }
         return userMapper.toResponseDto(user)
     }
 
@@ -239,7 +237,7 @@ class UserService(
         val user = userRepository.findUserById(id)
             .orElseThrow { CustomException("사용자를 찾을 수 없습니다") }
         userRepository.delete(user)
-        log.info { "사용자 삭제 완료: id=$id" }
+        logger.info { "사용자 삭제 완료: id=$id" }
     }
 
 
@@ -259,7 +257,19 @@ class UserService(
      */
     fun existsByEmail(email: String): Boolean =
         userRepository.existsByEmail(email)
-            .also { log.debug { "이메일 존재 여부 확인: email=$email, exists=$it" } }
+            .also { logger.debug { "이메일 존재 여부 확인: email=$email, exists=$it" } }
+
+    /**
+     * 이메일로 사용자 ID를 조회합니다.
+     *
+     * @param email 조회할 사용자의 이메일
+     * @return 사용자 ID (Long)
+     * @throws CustomException 사용자를 찾을 수 없는 경우
+     */
+    fun getUserIdByEmail(email: String): Long =
+        userRepository.findByEmail(email)
+            .map { it.id.value }
+            .orElseThrow { CustomException("사용자를 찾을 수 없습니다") }
 
     /**
      * 이메일로 사용자의 닉네임을 조회합니다.
@@ -278,7 +288,7 @@ class UserService(
         userRepository.findByEmail(email)
             .map(User::nickname)
             .orElseThrow { CustomException("사용자를 찾을 수 없습니다") }
-            .also { log.debug { "닉네임 조회 완료: email=$email, nickname=$it" } }
+            .also { logger.debug { "닉네임 조회 완료: email=$email, nickname=$it" } }
 
     /**
      * 사용자의 비밀번호를 업데이트합니다.
@@ -301,7 +311,7 @@ class UserService(
         userMapper.updateEntity(updateDto, user)
         userRepository.save(user)
 
-        log.info { "사용자 비밀번호 업데이트: id=$id" }
+        logger.info { "사용자 비밀번호 업데이트: id=$id" }
     }
 
     /**
@@ -322,6 +332,6 @@ class UserService(
         userMapper.updateEntity(updateDto, user)
         userRepository.save(user)
 
-        log.info { "사용자 역할 업데이트: id=$id, role=$newRole" }
+        logger.info { "사용자 역할 업데이트: id=$id, role=$newRole" }
     }
 } 

@@ -2,12 +2,13 @@ package blog.vans_story_be.domain.oauth.controller
 
 import blog.vans_story_be.domain.oauth.dto.OAuthDto
 import blog.vans_story_be.domain.oauth.service.OAuthService
+import blog.vans_story_be.domain.user.service.UserService
 import blog.vans_story_be.global.response.ApiResponse
+import blog.vans_story_be.global.response.withLogging
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
-import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 import org.springframework.security.core.userdetails.UserDetails
@@ -37,9 +38,9 @@ import org.springframework.web.bind.annotation.*
 @RequestMapping("/api/v1/oauth")
 @Tag(name = "OAuth", description = "OAuth 소셜 로그인 API")
 class OAuthController(
-    private val oauthService: OAuthService
+    private val oauthService: OAuthService,
+    private val userService: UserService
 ) {
-    private val logger = KotlinLogging.logger {}
 
     /**
      * OAuth 소셜 로그인을 처리합니다.
@@ -73,8 +74,7 @@ class OAuthController(
     fun oauthLogin(
         @Valid @RequestBody loginRequest: OAuthDto.LoginRequest
     ): ResponseEntity<ApiResponse<OAuthDto.CodeResponse>> = withLogging("OAuth 임시 코드 발급") {
-        val codeResponse = oauthService.oauthLogin(loginRequest)
-        ResponseEntity.ok(ApiResponse.success(codeResponse))
+        oauthService.oauthLogin(loginRequest)
     }
 
     /**
@@ -109,7 +109,7 @@ class OAuthController(
         response: HttpServletResponse
     ): ResponseEntity<ApiResponse<Nothing?>> = withLogging("OAuth 코드 교환") {
         oauthService.exchangeCodeForToken(exchangeRequest, response)
-        ResponseEntity.ok(ApiResponse.success<Nothing?>(null))
+        null
     }
 
     /**
@@ -145,8 +145,7 @@ class OAuthController(
         @AuthenticationPrincipal userDetails: UserDetails
     ): ResponseEntity<ApiResponse<OAuthDto.Response>> = withLogging("OAuth 계정 연결") {
         val userId = extractUserId(userDetails)
-        val linkedOAuth = oauthService.linkOAuthAccount(userId, linkRequest)
-        ResponseEntity.ok(ApiResponse.success(linkedOAuth))
+        oauthService.linkOAuthAccount(userId, linkRequest)
     }
 
     /**
@@ -182,7 +181,7 @@ class OAuthController(
     ): ResponseEntity<ApiResponse<Nothing?>> = withLogging("OAuth 계정 연결 해제") {
         val userId = extractUserId(userDetails)
         oauthService.unlinkOAuthAccount(userId, unlinkRequest)
-        ResponseEntity.ok(ApiResponse.success<Nothing?>(null))
+        null
     }
 
     /**
@@ -206,8 +205,7 @@ class OAuthController(
         @AuthenticationPrincipal userDetails: UserDetails
     ): ResponseEntity<ApiResponse<OAuthDto.LinkedAccountsResponse>> = withLogging("연결된 OAuth 계정 조회") {
         val userId = extractUserId(userDetails)
-        val linkedAccounts = oauthService.getLinkedAccounts(userId)
-        ResponseEntity.ok(ApiResponse.success(linkedAccounts))
+        oauthService.getLinkedAccounts(userId)
     }
 
     /**
@@ -216,29 +214,7 @@ class OAuthController(
      * @param userDetails 사용자 인증 정보
      * @return 사용자 ID
      */
-    private fun extractUserId(userDetails: UserDetails): Long {
-        // UserDetails의 username이 사용자 ID인 경우
-        return userDetails.username.toLongOrNull()
-            ?: throw IllegalArgumentException("유효하지 않은 사용자 정보입니다.")
-    }
+    private fun extractUserId(userDetails: UserDetails): Long =
+        userService.getUserIdByEmail(userDetails.username)
 
-    /**
-     * 로깅을 포함한 컨트롤러 메서드 실행을 위한 확장 함수
-     *
-     * @param operation 수행할 작업의 이름
-     * @param block 실행할 코드 블록
-     * @return API 응답
-     */
-    private inline fun <T> withLogging(
-        operation: String,
-        block: () -> ResponseEntity<ApiResponse<T>>
-    ): ResponseEntity<ApiResponse<T>> = try {
-        logger.info { "[$operation] 시작" }
-        val result = block()
-        logger.info { "[$operation] 성공" }
-        result
-    } catch (e: Exception) {
-        logger.error(e) { "[$operation] 실패" }
-        throw e
-    }
 } 

@@ -55,10 +55,13 @@ class InitialDataLoader(
     private val dataSource: DataSource
 ) : CommandLineRunner {
     companion object {
-        private val log = KotlinLogging.logger {}
         private const val ADMIN_USERNAME = "admin"
         private const val TEST_USERNAME = "testuser"
+        private const val ADMIN_NICKNAME = "관리자"
+        private const val TEST_NICKNAME = "테스트 사용자"
     }
+
+    private val logger = KotlinLogging.logger {}
 
     /**
      * 초기 계정 설정을 위한 데이터 클래스입니다.
@@ -81,9 +84,6 @@ class InitialDataLoader(
     @Value("\${VANS_BLOG_ADMIN_PASSWORD}")
     private lateinit var adminPassword: String
     
-    @Value("관리자")
-    private lateinit var adminNickname: String
-    
     @Value("\${VANS_BLOG_ADMIN_EMAIL}")
     private lateinit var adminEmail: String
     
@@ -92,9 +92,6 @@ class InitialDataLoader(
     
     @Value("\${VANS_BLOG_TEST_PASSWORD:Test1234!}")
     private lateinit var testPassword: String
-    
-    @Value("테스트 사용자")
-    private lateinit var testNickname: String
     
     @Value("\${VANS_BLOG_TEST_EMAIL}")
     private lateinit var testEmail: String
@@ -115,13 +112,13 @@ class InitialDataLoader(
             Database.connect(dataSource)
             initializeData()
         }.onFailure { e ->
-            log.error(e) { "초기 데이터 로드 중 상세 오류: ${e.message}" }
+            logger.error(e) { "초기 데이터 로드 중 상세 오류: ${e.message}" }
             when {
                 e.message?.contains("Table") == true && e.message?.contains("not found") == true -> {
-                    log.warn { "테이블이 아직 생성되지 않았습니다. 다음 실행시 데이터가 초기화됩니다." }
+                    logger.warn { "테이블이 아직 생성되지 않았습니다. 다음 실행시 데이터가 초기화됩니다." }
                 }
                 else -> {
-                    log.error(e) { "초기 데이터 로드 중 예상치 못한 오류 발생" }
+                    logger.error(e) { "초기 데이터 로드 중 예상치 못한 오류 발생" }
                     // 애플리케이션 시작을 막지 않도록 예외를 다시 던지지 않음
                 }
             }
@@ -137,13 +134,13 @@ class InitialDataLoader(
      */
     private fun initializeData() = transaction {
         
-        val adminConfig = AccountConfig(adminUsername, adminPassword, adminNickname, adminEmail)
-        val testConfig = AccountConfig(testUsername, testPassword, testNickname, testEmail)
+        val adminConfig = AccountConfig(adminUsername, adminPassword, ADMIN_NICKNAME, adminEmail)
+        val testConfig = AccountConfig(testUsername, testPassword, TEST_NICKNAME, testEmail)
 
         createAccountIfNotExists(adminConfig, ::createAdminAccount)
         createAccountIfNotExists(testConfig, ::createTestAccount)
         
-        log.info { "초기 데이터 설정 완료" }
+        logger.info { "초기 데이터 설정 완료" }
     }
 
     /**
@@ -165,7 +162,7 @@ class InitialDataLoader(
                 )
                 creator(request)
             }.onFailure { e ->
-                log.error(e) { "${config.nickname} 계정 생성 중 오류 발생" }
+                logger.error(e) { "${config.nickname} 계정 생성 중 오류 발생" }
                 throw e
             }
         }

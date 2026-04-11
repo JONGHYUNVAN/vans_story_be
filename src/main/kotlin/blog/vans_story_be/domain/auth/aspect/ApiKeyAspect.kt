@@ -48,7 +48,7 @@ import java.security.MessageDigest
 @Component
 class ApiKeyAspect {
     
-    private val log = KotlinLogging.logger {}
+    private val logger = KotlinLogging.logger {}
     
     @Value("\${VANS_BLOG_INTERNAL_API_KEY}")
     private lateinit var validApiKey: String
@@ -78,10 +78,10 @@ class ApiKeyAspect {
         val validBytes = validApiKey.toByteArray(Charsets.UTF_8)
         val inputBytes = (apiKey ?: "").toByteArray(Charsets.UTF_8)
         if (!MessageDigest.isEqual(validBytes, inputBytes)) {
-            log.warn { "유효하지 않은 API Key 접근 시도" }
+            logger.warn { "유효하지 않은 API Key 접근 시도" }
             throw CustomException("유효하지 않은 API 키입니다.")
         }
         
-        log.debug { "API Key 검증 성공" }
+        logger.debug { "API Key 검증 성공" }
     }
 } 

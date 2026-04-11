@@ -5,15 +5,11 @@ import blog.vans_story_be.domain.auth.service.AuthService
 import blog.vans_story_be.domain.user.dto.UserDto
 import blog.vans_story_be.domain.user.service.UserService
 import blog.vans_story_be.global.response.ApiResponse
-import blog.vans_story_be.global.response.noContent
-import blog.vans_story_be.global.response.ok
 import blog.vans_story_be.global.response.withLogging
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.tags.Tag
 import jakarta.servlet.http.HttpServletResponse
 import jakarta.validation.Valid
-import io.github.oshai.kotlinlogging.KotlinLogging
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -42,7 +38,6 @@ class AuthController(
     private val authService: AuthService,
     private val userService: UserService
 ) {
-    private val logger = KotlinLogging.logger {}
 
     /**
      * 사용자 회원가입을 처리합니다.
@@ -57,16 +52,8 @@ class AuthController(
     @PostMapping("/signup")
     fun signup(
         @Valid @RequestBody signupRequest: UserDto.CreateRequest
-    ): ResponseEntity<ApiResponse<UserDto.Response>> {
-        return try {
-            logger.info { "[회원가입] 시작" }
-            val user = userService.createUser(signupRequest)
-            logger.info { "[회원가입] 완료" }
-            ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.success(user))
-        } catch (e: Exception) {
-            logger.error(e) { "[회원가입] 실패" }
-            throw e
-        }
+    ): ResponseEntity<ApiResponse<UserDto.Response>> = withLogging("회원가입") {
+        userService.createUser(signupRequest)
     }
 
     /**
@@ -108,7 +95,7 @@ class AuthController(
         response: HttpServletResponse
     ): ResponseEntity<ApiResponse<Nothing?>> = withLogging("로그인") {
         authService.login(loginRequest, response)
-        ResponseEntity.ok(ApiResponse.success<Nothing?>(null))
+        null
     }
 
     /**
@@ -147,7 +134,7 @@ class AuthController(
         response: HttpServletResponse
     ): ResponseEntity<ApiResponse<Nothing?>> = withLogging("토큰 갱신") {
         authService.refresh(refreshToken, response)
-        ResponseEntity.ok(ApiResponse.success<Nothing?>(null))
+        null
     }
 
     /**
@@ -180,24 +167,7 @@ class AuthController(
         response: HttpServletResponse
     ): ResponseEntity<ApiResponse<Nothing?>> = withLogging("로그아웃") {
         authService.logout(refreshToken, response)
-        ResponseEntity.noContent().build()
+        null
     }
 
-    /**
-     * 로깅을 포함한 컨트롤러 메서드 실행을 위한 확장 함수
-     *
-     * @param operation 수행할 작업의 이름
-     * @param block 실행할 코드 블록
-     * @return API 응답
-     */
-    private inline fun <T> withLogging(
-        operation: String,
-        block: () -> ResponseEntity<ApiResponse<T>>
-    ): ResponseEntity<ApiResponse<T>> = try {
-        logger.info { "[$operation] 시작" }
-        block()
-    } catch (e: Exception) {
-        logger.error(e) { "[$operation] 실패" }
-        throw e
-    }
 } 

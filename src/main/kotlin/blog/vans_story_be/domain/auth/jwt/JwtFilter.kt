@@ -41,10 +41,11 @@ class JwtFilter(
     private val jwtProvider: JwtProvider
 ) : OncePerRequestFilter() {
 
+    private val log = KotlinLogging.logger {}
+
     companion object {
         private const val AUTHORIZATION_HEADER = "Authorization"
         private const val BEARER_PREFIX = "Bearer "
-        private val log = KotlinLogging.logger {}
     }
 
     /**
