@@ -76,7 +76,7 @@ class JwtFilter(
                 }
             }
         } catch (e: Exception) {
-            log.error("JWT 토큰 처리 중 오류 발생")
+            log.error { "JWT 토큰 처리 중 오류 발생" }
         }
         
         filterChain.doFilter(request, response)

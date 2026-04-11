@@ -25,13 +25,13 @@ class OAuthDto {
         @field:NotBlank(message = "OAuth 제공업체는 필수입니다")
         @field:Size(max = 50, message = "OAuth 제공업체는 50자 이하여야 합니다")
         @Schema(description = "OAuth 제공업체", example = "google", required = true)
-        @JsonProperty("provider")
+        @field:JsonProperty("provider")
         val provider: String,
 
         @field:NotBlank(message = "OAuth 제공업체 사용자 ID는 필수입니다")
         @field:Size(max = 100, message = "OAuth 제공업체 사용자 ID는 100자 이하여야 합니다")
         @Schema(description = "OAuth 제공업체 사용자 ID", example = "google_user_12345", required = true)
-        @JsonProperty("providerId")
+        @field:JsonProperty("providerId")
         val providerId: String
     )
 
@@ -45,13 +45,13 @@ class OAuthDto {
         @field:NotBlank(message = "OAuth 제공업체는 필수입니다")
         @field:Size(max = 50, message = "OAuth 제공업체는 50자 이하여야 합니다")
         @Schema(description = "OAuth 제공업체", example = "kakao", required = true)
-        @JsonProperty("provider")
+        @field:JsonProperty("provider")
         val provider: String,
 
         @field:NotBlank(message = "OAuth 제공업체 사용자 ID는 필수입니다")
         @field:Size(max = 100, message = "OAuth 제공업체 사용자 ID는 100자 이하여야 합니다")
         @Schema(description = "OAuth 제공업체 사용자 ID", example = "kakao_user_67890", required = true)
-        @JsonProperty("providerId")
+        @field:JsonProperty("providerId")
         val providerId: String
     )
 
@@ -63,7 +63,7 @@ class OAuthDto {
         @field:NotBlank(message = "OAuth 제공업체는 필수입니다")
         @field:Size(max = 50, message = "OAuth 제공업체는 50자 이하여야 합니다")
         @Schema(description = "OAuth 제공업체", example = "google", required = true)
-        @JsonProperty("provider")
+        @field:JsonProperty("provider")
         val provider: String
     )
 
@@ -73,7 +73,7 @@ class OAuthDto {
     @Schema(description = "OAuth 로그인 임시 코드 응답")
     data class CodeResponse(
         @Schema(description = "임시 인증 코드 (5분 후 만료)", example = "temp_oauth_code_12345")
-        @JsonProperty("code")
+        @field:JsonProperty("code")
         val code: String
     )
 
@@ -84,7 +84,7 @@ class OAuthDto {
     data class ExchangeRequest(
         @field:NotBlank(message = "임시 인증 코드는 필수입니다")
         @Schema(description = "임시 인증 코드", example = "temp_oauth_code_12345", required = true)
-        @JsonProperty("code")
+        @field:JsonProperty("code")
         val code: String
     )
 
@@ -94,27 +94,27 @@ class OAuthDto {
     @Schema(description = "OAuth 연동 정보 응답")
     data class Response(
         @Schema(description = "OAuth 연동 ID", example = "1")
-        @JsonProperty("id")
+        @field:JsonProperty("id")
         val id: Long,
 
         @Schema(description = "사용자 ID", example = "1")
-        @JsonProperty("userId")
+        @field:JsonProperty("userId")
         val userId: Long,
 
         @Schema(description = "OAuth 제공업체", example = "google")
-        @JsonProperty("provider")
+        @field:JsonProperty("provider")
         val provider: String,
 
         @Schema(description = "OAuth 제공업체 사용자 ID", example = "google_user_12345")
-        @JsonProperty("providerId")
+        @field:JsonProperty("providerId")
         val providerId: String,
 
         @Schema(description = "연동 생성 시간", example = "2025-01-09T10:00:00")
-        @JsonProperty("createdAt")
+        @field:JsonProperty("createdAt")
         val createdAt: LocalDateTime,
 
         @Schema(description = "연동 정보 수정 시간", example = "2025-01-09T10:00:00")
-        @JsonProperty("updatedAt")
+        @field:JsonProperty("updatedAt")
         val updatedAt: LocalDateTime
     )
 
@@ -124,17 +124,17 @@ class OAuthDto {
     @Schema(description = "연결된 OAuth 계정 목록 응답")
     data class LinkedAccountsResponse(
         @Schema(description = "연결된 OAuth 계정 목록")
-        @JsonProperty("linkedAccounts")
+        @field:JsonProperty("linkedAccounts")
         val linkedAccounts: List<LinkedAccount>
     ) {
         @Schema(description = "연결된 OAuth 계정 정보")
         data class LinkedAccount(
             @Schema(description = "OAuth 제공업체", example = "google")
-            @JsonProperty("provider")
+            @field:JsonProperty("provider")
             val provider: String,
 
             @Schema(description = "연동 생성 시간", example = "2025-01-09T10:00:00")
-            @JsonProperty("createdAt")
+            @field:JsonProperty("createdAt")
             val createdAt: LocalDateTime
         )
     }

@@ -36,7 +36,7 @@ class AuthService(
     private val jwtProperties: JwtProperties,
     private val refreshTokenRepository: RefreshTokenRepository,
     private val userRepository: UserRepository,
-    @Qualifier("bcryptExecutor") private val bcryptExecutor: ExecutorService
+    @param:Qualifier("bcryptExecutor") private val bcryptExecutor: ExecutorService
 ) {
     private val logger = KotlinLogging.logger {}
 
