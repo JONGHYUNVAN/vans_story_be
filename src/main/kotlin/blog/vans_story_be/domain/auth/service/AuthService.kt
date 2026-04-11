@@ -6,11 +6,15 @@ import blog.vans_story_be.global.exception.CustomException
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletResponse
 import mu.KotlinLogging
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.ExecutionException
+import java.util.concurrent.ExecutorService
 
 /**
  * 인증 관련 비즈니스 로직을 처리하는 서비스입니다.
@@ -46,7 +50,8 @@ import org.springframework.stereotype.Service
 @Service
 class AuthService(
     private val authenticationManager: AuthenticationManager,
-    private val jwtProvider: JwtProvider
+    private val jwtProvider: JwtProvider,
+    @Qualifier("bcryptExecutor") private val bcryptExecutor: ExecutorService
 ) {
     private val logger = KotlinLogging.logger {}
 
@@ -67,17 +72,23 @@ class AuthService(
      */
     fun login(loginRequest: LoginRequest, response: HttpServletResponse) {
         runCatching {
-            val authentication = authenticateUser(loginRequest)
+            // BCrypt(CPU bound)를 전용 플랫폼 스레드 풀로 오프로드.
+            // Virtual Thread에서 get() 블로킹 시 park → carrier thread 해방.
+            val authentication = CompletableFuture
+                .supplyAsync({ authenticateUser(loginRequest) }, bcryptExecutor)
+                .get()
             generateAndSetTokens(authentication, response)
         }.onFailure { e ->
             logger.error(e) { "로그인 실패: ${loginRequest.email}, 오류: ${e.message}" }
-            throw when (e) {
+            // CompletableFuture.get()은 원인 예외를 ExecutionException으로 래핑함
+            val cause = if (e is ExecutionException) e.cause ?: e else e
+            throw when (cause) {
                 is BadCredentialsException -> {
                     logger.error { "인증 실패 - 잘못된 자격 증명: ${loginRequest.email}" }
                     CustomException("이메일 또는 비밀번호가 올바르지 않습니다.")
                 }
                 else -> {
-                    logger.error(e) { "로그인 처리 중 예상치 못한 오류: ${e::class.simpleName}" }
+                    logger.error(cause) { "로그인 처리 중 예상치 못한 오류: ${cause::class.simpleName}" }
                     CustomException("로그인 처리 중 오류가 발생했습니다.")
                 }
             }

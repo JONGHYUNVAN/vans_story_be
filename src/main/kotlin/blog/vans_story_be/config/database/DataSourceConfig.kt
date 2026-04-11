@@ -5,6 +5,8 @@ import com.zaxxer.hikari.HikariDataSource
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
 import javax.sql.DataSource
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
@@ -45,8 +47,8 @@ class DataSourceConfig {
             
             // HikariCP 설정
             connectionInitSql = "SET NAMES utf8mb4"
-            maximumPoolSize = 10
-            minimumIdle = 5
+            maximumPoolSize = 20
+            minimumIdle = 10
             connectionTimeout = 30000
             idleTimeout = 600000
             maxLifetime = 1800000
@@ -54,6 +56,19 @@ class DataSourceConfig {
         
         return HikariDataSource(config)
     }
+
+    /**
+     * BCrypt 해시 연산 전용 플랫폼 스레드 풀.
+     *
+     * Virtual Thread 환경에서 CPU bound 작업(BCrypt ~100-300ms)을
+     * carrier thread로부터 분리하여 다른 VT 스케줄링을 방해하지 않도록 합니다.
+     * 풀 크기는 가용 CPU 코어 수 기준으로 설정하며, 최소 4개를 보장합니다.
+     */
+    @Bean(name = ["bcryptExecutor"], destroyMethod = "shutdown")
+    fun bcryptExecutor(): ExecutorService =
+        Executors.newFixedThreadPool(
+            Runtime.getRuntime().availableProcessors().coerceAtLeast(4)
+        )
 
     @EventListener(ApplicationReadyEvent::class)
     fun createTables() {

@@ -2,6 +2,10 @@ spring:
   config:
     import: optional:file:.env[.properties]
 
+  threads:
+    virtual:
+      enabled: true
+
   main:
     allow-bean-definition-overriding: true
 

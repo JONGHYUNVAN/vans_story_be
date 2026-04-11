@@ -15,6 +15,7 @@ import io.mockk.mockk
 import io.mockk.verify
 import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletResponse
+import java.util.concurrent.ExecutorService
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
@@ -33,7 +34,7 @@ class AuthServiceTest : DescribeSpec({
     val mockResponse = mockk<HttpServletResponse>(relaxed = true)
     
     // 테스트할 서비스 인스턴스
-    val authService = AuthService(mockAuthManager, mockJwtProvider)
+    val authService = AuthService(mockAuthManager, mockJwtProvider, mockk<ExecutorService>())
     
     describe("login 메서드는") {
         context("유효한 로그인 요청이 주어지면") {

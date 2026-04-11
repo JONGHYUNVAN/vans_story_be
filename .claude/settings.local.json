@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"D:\\\\blog\\\\vans_story_be\\\\src\\\\main\\\\java\")"
+    ]
+  }
+}
