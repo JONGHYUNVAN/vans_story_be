@@ -30,7 +30,9 @@ class UserRepositoryImpl : UserRepository {
      * SELECT * FROM users WHERE email = ? LIMIT 1;
      */
     override fun findByEmail(email: String): Optional<User> =
-        Optional.ofNullable(User.find { Users.email.eq(email) }.firstOrNull())
+        transaction {
+            Optional.ofNullable(User.find { Users.email.eq(email) }.firstOrNull())
+        }
 
 
 

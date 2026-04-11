@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import java.security.MessageDigest
 
 /**
  * API Key 인증을 처리하는 Aspect 클래스입니다.
@@ -74,8 +75,10 @@ class ApiKeyAspect {
             ?: throw CustomException("요청 컨텍스트를 찾을 수 없습니다.")
         
         val apiKey = attributes.request.getHeader("X-API-KEY")
-        if (validApiKey != apiKey) {
-            log.warn { "유효하지 않은 API Key 접근 시도: ${apiKey?.take(5)}..." }
+        val validBytes = validApiKey.toByteArray(Charsets.UTF_8)
+        val inputBytes = (apiKey ?: "").toByteArray(Charsets.UTF_8)
+        if (!MessageDigest.isEqual(validBytes, inputBytes)) {
+            log.warn { "유효하지 않은 API Key 접근 시도" }
             throw CustomException("유효하지 않은 API 키입니다.")
         }
         

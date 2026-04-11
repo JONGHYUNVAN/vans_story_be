@@ -1,13 +1,17 @@
 package blog.vans_story_be.domain.oauth.service
 
+import blog.vans_story_be.domain.auth.jwt.JwtProperties
 import blog.vans_story_be.domain.auth.jwt.JwtProvider
+import blog.vans_story_be.domain.auth.repository.RefreshTokenRepository
 import blog.vans_story_be.domain.oauth.dto.OAuthDto
 import blog.vans_story_be.domain.oauth.mapper.OAuthMapper
 import blog.vans_story_be.domain.oauth.repository.OAuthRepository
 import blog.vans_story_be.domain.user.entity.User
 import blog.vans_story_be.global.exception.CustomException
-import jakarta.servlet.http.Cookie
 import jakarta.servlet.http.HttpServletResponse
+import org.springframework.http.ResponseCookie
+import java.security.MessageDigest
+import java.time.Duration
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -38,7 +42,9 @@ import java.util.concurrent.ConcurrentHashMap
 class OAuthService(
     private val oauthRepository: OAuthRepository,
     private val oauthMapper: OAuthMapper,
-    private val jwtProvider: JwtProvider
+    private val jwtProvider: JwtProvider,
+    private val jwtProperties: JwtProperties,
+    private val refreshTokenRepository: RefreshTokenRepository
 ) {
     private val logger = KotlinLogging.logger {}
 
@@ -193,19 +199,34 @@ class OAuthService(
         val accessToken = jwtProvider.generateAccessToken(authentication)
         val refreshToken = jwtProvider.generateRefreshToken(authentication)
 
+        // Refresh Token 해시 DB 저장 (기존 세션 무효화 후)
+        val userId = user.id.value
+        val tokenHash = hashToken(refreshToken)
+        val expiresAt = LocalDateTime.now().plusSeconds(jwtProperties.refreshTokenValidityInSeconds)
+        refreshTokenRepository.deleteByUserId(userId)
+        refreshTokenRepository.save(userId, tokenHash, expiresAt)
+
         response.setHeader("Authorization", BEARER_PREFIX + accessToken)
-        response.addCookie(createRefreshTokenCookie(refreshToken))
+        response.addHeader("Set-Cookie", createRefreshTokenResponseCookie(refreshToken).toString())
     }
 
     /**
-     * Refresh Token 쿠키를 생성합니다.
+     * Refresh Token ResponseCookie를 생성합니다 (SameSite=Strict).
      */
-    private fun createRefreshTokenCookie(refreshToken: String): Cookie =
-        Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken).apply {
-            isHttpOnly = true
-            secure = true
-            path = "/"
-        }
+    private fun createRefreshTokenResponseCookie(refreshToken: String): ResponseCookie =
+        ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
+            .httpOnly(true)
+            .secure(true)
+            .sameSite("Strict")
+            .path("/api/v1/auth/refresh")
+            .maxAge(Duration.ofSeconds(jwtProperties.refreshTokenValidityInSeconds))
+            .build()
+
+    private fun hashToken(token: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        return digest.digest(token.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }
+    }
 
 
 

@@ -1,3 +1,6 @@
+# JWT 기본값 (환경변수로 override 가능)
+VANS_BLOG_JWT_ACCESS_TOKEN_VALIDITY: 900
+
 spring:
   config:
     import: optional:file:.env[.properties]

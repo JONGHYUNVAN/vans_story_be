@@ -15,6 +15,7 @@ import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import blog.vans_story_be.domain.user.entity.Users
 import blog.vans_story_be.domain.oauth.entity.UserOAuths
+import blog.vans_story_be.domain.auth.entity.RefreshTokens
 import io.github.oshai.kotlinlogging.KotlinLogging
 
 @Configuration
@@ -77,7 +78,7 @@ class DataSourceConfig {
             Database.connect(dataSource())
             transaction {
                 log.info { "데이터베이스 테이블 생성 시작..." }
-                SchemaUtils.create(Users, UserOAuths)
+                SchemaUtils.create(Users, UserOAuths, RefreshTokens)
                 log.info { "데이터베이스 테이블 생성 완료!" }
             }
         }.onFailure { e ->

@@ -64,8 +64,8 @@ class GlobalExceptionHandler {
     @ExceptionHandler(Exception::class)
     fun handleException(e: Exception): ResponseEntity<ApiResponse<Unit>> =
         ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(ApiResponse.error<Unit>(e.message ?: "알 수 없는 오류가 발생했습니다"))
-            .also { log.error(e) { "처리되지 않은 예외 발생: ${e.message}" } }
+            .body(ApiResponse.error<Unit>("서버 오류가 발생했습니다."))
+            .also { log.error(e) { "처리되지 않은 예외 발생: ${e::class.simpleName}" } }
 
     /**
      * JSON 파싱/타입 변환 예외를 처리하는 핸들러

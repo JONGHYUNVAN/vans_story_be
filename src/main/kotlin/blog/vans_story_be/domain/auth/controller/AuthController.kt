@@ -175,8 +175,11 @@ class AuthController(
         description = "사용자 로그아웃을 처리하고 Refresh Token을 만료시킵니다."
     )
     @PostMapping("/logout")
-    fun logout(response: HttpServletResponse): ResponseEntity<ApiResponse<Nothing?>> = withLogging("로그아웃") {
-        authService.logout(response)
+    fun logout(
+        @CookieValue(name = "refreshToken", required = false) refreshToken: String?,
+        response: HttpServletResponse
+    ): ResponseEntity<ApiResponse<Nothing?>> = withLogging("로그아웃") {
+        authService.logout(refreshToken, response)
         ResponseEntity.noContent().build()
     }
 

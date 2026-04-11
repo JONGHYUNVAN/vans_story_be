@@ -43,8 +43,8 @@ class JwtProperties {
     /**
      * 액세스 토큰의 유효 기간(초)입니다.
      */
-    @Value("\${VANS_BLOG_JWT_ACCESS_TOKEN_VALIDITY}")
-    var accessTokenValidityInSeconds: Long = 0L
+    @Value("\${VANS_BLOG_JWT_ACCESS_TOKEN_VALIDITY:900}")
+    var accessTokenValidityInSeconds: Long = 900L
     
     /**
      * 리프레시 토큰의 유효 기간(초)입니다.

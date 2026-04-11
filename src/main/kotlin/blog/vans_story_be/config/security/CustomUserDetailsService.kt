@@ -77,16 +77,17 @@ class CustomUserDetailsService(
      * @throws CustomException 사용자를 찾을 수 없는 경우
      */
     override fun loadUserByUsername(email: String): UserDetails {
-        logger.info { "사용자 조회 시도: $email" }
+        val masked = maskEmail(email)
+        logger.info { "사용자 조회 시도: $masked" }
         return transaction {
             userRepository.findByEmail(email)
                 .map { user ->
-                    logger.info { "사용자 발견: ${user.email}, 역할: ${user.role}" }
+                    logger.info { "사용자 발견: $masked, 역할: ${user.role}" }
                     createUserDetails(user)
                 }
-                .orElseThrow { 
-                    logger.error { "사용자를 찾을 수 없습니다: $email" }
-                    CustomException("사용자를 찾을 수 없습니다.") 
+                .orElseThrow {
+                    logger.warn { "사용자를 찾을 수 없습니다: $masked" }
+                    CustomException("사용자를 찾을 수 없습니다.")
                 }
         }
     }
@@ -122,5 +123,11 @@ class CustomUserDetailsService(
             .password(user.password)
             .authorities(setOf(authority))
             .build()
+    }
+
+    private fun maskEmail(email: String): String {
+        val atIndex = email.indexOf('@')
+        if (atIndex <= 3) return "***@***"
+        return email.take(3) + "***" + email.substring(atIndex)
     }
 } 

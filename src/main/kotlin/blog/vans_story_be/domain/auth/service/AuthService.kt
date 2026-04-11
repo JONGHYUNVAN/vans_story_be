@@ -1,56 +1,41 @@
 package blog.vans_story_be.domain.auth.service
 
 import blog.vans_story_be.domain.auth.dto.LoginRequest
+import blog.vans_story_be.domain.auth.jwt.JwtProperties
 import blog.vans_story_be.domain.auth.jwt.JwtProvider
+import blog.vans_story_be.domain.auth.repository.RefreshTokenRepository
+import blog.vans_story_be.domain.user.repository.UserRepository
 import blog.vans_story_be.global.exception.CustomException
-import jakarta.servlet.http.Cookie
-import jakarta.servlet.http.HttpServletResponse
 import io.github.oshai.kotlinlogging.KotlinLogging
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.http.ResponseCookie
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.authentication.BadCredentialsException
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Service
+import java.security.MessageDigest
+import java.time.Duration
+import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.ExecutionException
 import java.util.concurrent.ExecutorService
 
 /**
- * 인증 관련 비즈니스 로직을 처리하는 서비스입니다.
- * 
- * <p>로그인, 토큰 갱신, Refresh Token 관리 등의 인증 관련 기능을 제공합니다.
- * JWT 기반의 인증을 사용하며, 액세스 토큰과 리프레시 토큰을 모두 관리합니다.</p>
- * 
- * <h4>주요 기능:</h4>
- * <ul>
- *   <li>사용자 로그인 및 토큰 발급</li>
- *   <li>토큰 갱신 (Refresh Token 사용)</li>
- *   <li>로그아웃 처리</li>
- * </ul>
- * 
- * <h4>사용 예시:</h4>
- * <pre>
- * // 로그인 처리
- * authService.login(loginRequest, response)
- * 
- * // 토큰 갱신
- * authService.refresh(refreshToken, response)
- * 
- * // 로그아웃
- * authService.logout(response)
- * </pre>
- * 
- * @author vans
- * @version 1.0.0
- * @since 2025.06.07
- * @see JwtProvider
- * @see LoginRequest
+ * 인증 관련 비즈니스 로직을 처리하는 서비스.
+ *
+ * - 로그인: BCrypt 인증 → Access/Refresh Token 발급 → Refresh Token 해시 DB 저장
+ * - 갱신: Refresh Token DB 존재 확인 → JWT 검증 → 토큰 회전(rotation)
+ * - 로그아웃: DB에서 Refresh Token 삭제 → 쿠키 만료
  */
 @Service
 class AuthService(
     private val authenticationManager: AuthenticationManager,
     private val jwtProvider: JwtProvider,
+    private val jwtProperties: JwtProperties,
+    private val refreshTokenRepository: RefreshTokenRepository,
+    private val userRepository: UserRepository,
     @Qualifier("bcryptExecutor") private val bcryptExecutor: ExecutorService
 ) {
     private val logger = KotlinLogging.logger {}
@@ -58,33 +43,23 @@ class AuthService(
     companion object {
         private const val REFRESH_TOKEN_COOKIE_NAME = "refreshToken"
         private const val BEARER_PREFIX = "Bearer "
+        private const val REFRESH_COOKIE_PATH = "/api/v1/auth/refresh"
     }
 
     /**
-     * 사용자 로그인을 처리하고 JWT 토큰을 발급합니다.
-     * 
-     * <p>사용자 인증 후 액세스 토큰과 리프레시 토큰을 발급하며,
-     * 액세스 토큰은 Authorization 헤더에, 리프레시 토큰은 쿠키에 저장됩니다.</p>
-     * 
-     * @param loginRequest 로그인 요청 정보 (이메일, 비밀번호)
-     * @param response HTTP 응답 객체
-     * @throws BadCredentialsException 인증 실패 시
+     * 사용자 로그인 처리. BCrypt를 전용 스레드 풀에서 오프로드.
      */
     fun login(loginRequest: LoginRequest, response: HttpServletResponse) {
         runCatching {
-            // BCrypt(CPU bound)를 전용 플랫폼 스레드 풀로 오프로드.
-            // Virtual Thread에서 get() 블로킹 시 park → carrier thread 해방.
             val authentication = CompletableFuture
                 .supplyAsync({ authenticateUser(loginRequest) }, bcryptExecutor)
                 .get()
             generateAndSetTokens(authentication, response)
         }.onFailure { e ->
-            logger.error(e) { "로그인 실패: ${loginRequest.email}, 오류: ${e.message}" }
-            // CompletableFuture.get()은 원인 예외를 ExecutionException으로 래핑함
             val cause = if (e is ExecutionException) e.cause ?: e else e
             throw when (cause) {
                 is BadCredentialsException -> {
-                    logger.error { "인증 실패 - 잘못된 자격 증명: ${loginRequest.email}" }
+                    logger.warn { "인증 실패 - 잘못된 자격 증명: ${maskEmail(loginRequest.email)}" }
                     CustomException("이메일 또는 비밀번호가 올바르지 않습니다.")
                 }
                 else -> {
@@ -96,72 +71,56 @@ class AuthService(
     }
 
     /**
-     * Refresh Token을 검증하고 새로운 토큰을 발급합니다.
-     * 
-     * <p>기존 Refresh Token의 유효성을 검증한 후,
-     * 새로운 액세스 토큰과 리프레시 토큰을 발급합니다.</p>
-     * 
-     * @param refreshToken 갱신에 사용할 Refresh Token
-     * @param response HTTP 응답 객체
-     * @throws CustomException 토큰이 유효하지 않거나 사용자 정보가 일치하지 않는 경우
+     * Refresh Token 검증 후 새 토큰 발급 (토큰 회전).
+     * DB 존재 확인 → JWT 서명/만료 검증 → 기존 삭제 → 신규 저장.
      */
     fun refresh(refreshToken: String, response: HttpServletResponse) {
         runCatching {
+            val tokenHash = hashToken(refreshToken)
+            val userId = refreshTokenRepository.findUserIdByTokenHash(tokenHash)
+                ?: throw CustomException("Refresh Token이 서버에 존재하지 않습니다.")
+
             val authentication = validateAndGetAuthentication(refreshToken)
+
+            // 기존 토큰 삭제 후 신규 발급 (rotation)
+            refreshTokenRepository.deleteByUserId(userId)
             generateAndSetTokens(authentication, response)
-            logger.info { "토큰 갱신 성공: ${authentication.name}" }
+
+            logger.info { "토큰 갱신 성공: ${maskEmail(authentication.name)}" }
         }.onFailure { e ->
-            logger.error(e) { "토큰 갱신 실패" }
+            logger.warn(e) { "토큰 갱신 실패" }
             throw CustomException("토큰 갱신에 실패했습니다.")
         }
     }
 
     /**
-     * 로그아웃을 처리합니다.
-     * 
-     * <p>Refresh Token 쿠키를 만료시켜 로그아웃을 처리합니다.</p>
-     * 
-     * @param response HTTP 응답 객체
+     * 로그아웃 처리. Refresh Token을 DB에서 삭제하고 쿠키를 만료시킵니다.
      */
-    fun logout(response: HttpServletResponse) {
-        response.addCookie(createExpiredCookie())
+    fun logout(refreshToken: String?, response: HttpServletResponse) {
+        if (refreshToken != null) {
+            runCatching {
+                val tokenHash = hashToken(refreshToken)
+                val userId = refreshTokenRepository.findUserIdByTokenHash(tokenHash)
+                if (userId != null) {
+                    refreshTokenRepository.deleteByUserId(userId)
+                    logger.info { "Refresh Token DB 삭제 완료 (userId=$userId)" }
+                }
+            }.onFailure { e ->
+                logger.warn(e) { "로그아웃 중 토큰 삭제 실패 (무시하고 계속)" }
+            }
+        }
+        response.addHeader("Set-Cookie", createExpiredResponseCookie().toString())
         logger.info { "사용자 로그아웃 처리 완료" }
     }
 
-    // Private helper functions
+    // ── Private helpers ────────────────────────────────────────────────────────
 
-    /**
-     * 사용자 인증을 수행합니다.
-     *
-     * 처리 과정:
-     * 1. 이메일과 비밀번호로 인증 토큰 생성
-     * 2. AuthenticationManager를 통해 실제 인증 수행
-     *
-     * @param loginRequest 로그인 요청 정보
-     * @return 인증된 사용자의 Authentication 객체
-     * @throws BadCredentialsException 인증 실패 시
-     */
     private fun authenticateUser(loginRequest: LoginRequest): Authentication {
-        logger.info { "인증 토큰 생성: ${loginRequest.email}" }
-        val authenticationToken = UsernamePasswordAuthenticationToken(
-            loginRequest.email,
-            loginRequest.password
-        )
-        logger.info { "AuthenticationManager를 통한 인증 시작" }
-        return authenticationManager.authenticate(authenticationToken)
+        logger.info { "인증 시작: ${maskEmail(loginRequest.email)}" }
+        val token = UsernamePasswordAuthenticationToken(loginRequest.email, loginRequest.password)
+        return authenticationManager.authenticate(token)
     }
 
-    /**
-     * Refresh Token을 검증하고 인증 정보를 추출합니다.
-     *
-     * 처리 과정:
-     * 1. Refresh Token 유효성 검증
-     * 2. 토큰에서 인증 정보 추출
-     *
-     * @param refreshToken 검증할 Refresh Token
-     * @return 인증된 사용자의 Authentication 객체
-     * @throws CustomException 토큰이 유효하지 않은 경우
-     */
     private fun validateAndGetAuthentication(refreshToken: String): Authentication {
         if (!jwtProvider.validateToken(refreshToken)) {
             throw CustomException("Refresh Token이 유효하지 않습니다.")
@@ -170,58 +129,70 @@ class AuthService(
     }
 
     /**
-     * 새로운 토큰을 생성하고 HTTP 응답에 설정합니다.
-     *
-     * 처리 과정:
-     * 1. Access Token과 Refresh Token 생성
-     * 2. Access Token을 Authorization 헤더에 설정
-     * 3. Refresh Token을 쿠키에 설정
-     *
-     * @param authentication 인증된 사용자 정보
-     * @param response HTTP 응답 객체
+     * Access/Refresh Token 생성 후 응답에 설정.
+     * Refresh Token 해시를 DB에 저장 (기존 세션 무효화 후 저장).
      */
     private fun generateAndSetTokens(authentication: Authentication, response: HttpServletResponse) {
         val accessToken = jwtProvider.generateAccessToken(authentication)
         val refreshToken = jwtProvider.generateRefreshToken(authentication)
-        
+
+        // userId 조회 (JWT subject = email)
+        // transaction{}은 UserRepositoryImpl 내부에서 처리됨
+        val email = authentication.name
+        val userId = userRepository.findByEmail(email)
+            .map { it.id.value }
+            .orElseThrow { CustomException("사용자를 찾을 수 없습니다.") }
+
+        // 기존 세션 무효화 후 신규 토큰 저장
+        val tokenHash = hashToken(refreshToken)
+        val expiresAt = LocalDateTime.now().plusSeconds(jwtProperties.refreshTokenValidityInSeconds)
+        refreshTokenRepository.deleteByUserId(userId)
+        refreshTokenRepository.save(userId, tokenHash, expiresAt)
+
         response.setHeader("Authorization", BEARER_PREFIX + accessToken)
-        response.addCookie(createRefreshTokenCookie(refreshToken))
+        response.addHeader("Set-Cookie", createRefreshTokenResponseCookie(refreshToken).toString())
     }
 
     /**
-     * Refresh Token을 저장할 쿠키를 생성합니다.
-     *
-     * 보안 설정:
-     * - HttpOnly: JavaScript에서 쿠키 접근 불가
-     * - Secure: HTTPS에서만 전송
-     * - Path: 루트 경로에서만 접근 가능
-     *
-     * @param refreshToken 저장할 Refresh Token
-     * @return 설정된 쿠키 객체
+     * Refresh Token 쿠키 생성 (ResponseCookie, SameSite=Strict).
+     * path=/api/v1/auth/refresh 로 제한하여 다른 요청에 쿠키 미전송.
      */
-    private fun createRefreshTokenCookie(refreshToken: String): Cookie =
-        Cookie(REFRESH_TOKEN_COOKIE_NAME, refreshToken).apply {
-            isHttpOnly = true
-            secure = true
-            path = "/"
-        }
+    private fun createRefreshTokenResponseCookie(refreshToken: String): ResponseCookie =
+        ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, refreshToken)
+            .httpOnly(true)
+            .secure(true)
+            .sameSite("Strict")
+            .path(REFRESH_COOKIE_PATH)
+            .maxAge(Duration.ofSeconds(jwtProperties.refreshTokenValidityInSeconds))
+            .build()
 
     /**
-     * 만료된 쿠키를 생성하여 로그아웃 처리를 합니다.
-     *
-     * 처리 과정:
-     * 1. 빈 값의 쿠키 생성
-     * 2. 보안 설정 적용
-     * 3. MaxAge를 0으로 설정하여 즉시 만료
-     *
-     * @return 만료 설정된 쿠키 객체
+     * 만료된 Refresh Token 쿠키 생성.
      */
-    private fun createExpiredCookie(): Cookie =
-        Cookie(REFRESH_TOKEN_COOKIE_NAME, "").apply {
-            isHttpOnly = true
-            secure = true
-            path = "/"
-            maxAge = 0
-        }
-}
+    private fun createExpiredResponseCookie(): ResponseCookie =
+        ResponseCookie.from(REFRESH_TOKEN_COOKIE_NAME, "")
+            .httpOnly(true)
+            .secure(true)
+            .sameSite("Strict")
+            .path(REFRESH_COOKIE_PATH)
+            .maxAge(Duration.ZERO)
+            .build()
 
+    /**
+     * SHA-256 해시 (64자 hex 문자열).
+     */
+    private fun hashToken(token: String): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        return digest.digest(token.toByteArray(Charsets.UTF_8))
+            .joinToString("") { "%02x".format(it) }
+    }
+
+    /**
+     * 이메일 마스킹: 앞 3자리 + *** + @도메인
+     */
+    private fun maskEmail(email: String): String {
+        val atIndex = email.indexOf('@')
+        if (atIndex <= 3) return "***@***"
+        return email.take(3) + "***" + email.substring(atIndex)
+    }
+}
