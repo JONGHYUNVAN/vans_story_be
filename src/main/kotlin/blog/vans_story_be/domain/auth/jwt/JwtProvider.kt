@@ -35,7 +35,7 @@ import javax.crypto.SecretKey
  * val refreshToken = jwtProvider.generateRefreshToken(authentication)
  * 
  * // 토큰 검증
- * if (jwtProvider.validateToken(token)) {
+ * if (jwtProvider.validateToken(token, TokenType.ACCESS)) {
  *     val authentication = jwtProvider.getAuthentication(token)
  *     // 인증 처리
  * }
@@ -72,7 +72,7 @@ class JwtProvider(
      * @return 생성된 액세스 토큰
      */
     fun generateAccessToken(authentication: Authentication): String =
-        generateToken(authentication, jwtProperties.accessTokenValidityInSeconds)
+        generateToken(authentication, jwtProperties.accessTokenValidityInSeconds, TokenType.ACCESS)
 
     /**
      * 리프레시 토큰을 생성합니다.
@@ -81,16 +81,17 @@ class JwtProvider(
      * @return 생성된 리프레시 토큰
      */
     fun generateRefreshToken(authentication: Authentication): String =
-        generateToken(authentication, jwtProperties.refreshTokenValidityInSeconds)
+        generateToken(authentication, jwtProperties.refreshTokenValidityInSeconds, TokenType.REFRESH)
 
     /**
      * JWT 토큰을 생성합니다.
-     * 
+     *
      * @param authentication 인증 정보
      * @param validityInSeconds 토큰 유효 기간(초)
+     * @param type 토큰 용도 (`typ` 클레임)
      * @return 생성된 JWT 토큰
      */
-    private fun generateToken(authentication: Authentication, validityInSeconds: Long): String {
+    private fun generateToken(authentication: Authentication, validityInSeconds: Long, type: TokenType): String {
         val authorities = authentication.authorities.joinToString(",") { it.authority.orEmpty() }
         val now = Date()
         val validity = Date(now.time + validityInSeconds * 1000)
@@ -98,6 +99,7 @@ class JwtProvider(
         return Jwts.builder()
             .subject(authentication.name)
             .claim("auth", authorities)
+            .claim(TokenType.CLAIM, type.claimValue)
             .signWith(key)
             .expiration(validity)
             .compact()
@@ -122,14 +124,16 @@ class JwtProvider(
     }
 
     /**
-     * JWT 토큰의 유효성을 검증합니다.
-     * 
+     * JWT 토큰의 서명·만료·용도(`typ`)를 검증합니다.
+     *
      * @param token 검증할 JWT 토큰
+     * @param expectedType 이 자리에서 받아야 하는 토큰 타입
+     * @param allowMissingType true면 `typ` 클레임이 없는 토큰(typ 도입 전 발급분)도 통과시킵니다.
+     *   전환기 동안 Refresh 토큰 DB 확인을 거친 경로에서만 사용합니다. 값이 있는데 다르면 여전히 거부합니다.
      * @return 토큰 유효성 여부
      */
-    fun validateToken(token: String): Boolean = try {
-        parseClaims(token)
-        true
+    fun validateToken(token: String, expectedType: TokenType, allowMissingType: Boolean = false): Boolean = try {
+        hasExpectedType(parseClaims(token), expectedType, allowMissingType)
     } catch (e: SecurityException) {
         logger.info { "잘못된 JWT 서명입니다." }
         false
@@ -145,6 +149,19 @@ class JwtProvider(
     } catch (e: IllegalArgumentException) {
         logger.info { "JWT 토큰이 잘못되었습니다." }
         false
+    }
+
+    private fun hasExpectedType(claims: Claims, expectedType: TokenType, allowMissingType: Boolean): Boolean {
+        val rawType = claims[TokenType.CLAIM]
+        if (rawType == null && allowMissingType) {
+            logger.info { "typ 클레임이 없는 레거시 ${expectedType.claimValue} 토큰을 허용합니다." }
+            return true
+        }
+        if (TokenType.fromClaim(rawType) != expectedType) {
+            logger.info { "JWT 토큰 타입이 맞지 않습니다. (expected=${expectedType.claimValue}, actual=$rawType)" }
+            return false
+        }
+        return true
     }
 
     /**

@@ -46,7 +46,7 @@ Header.Payload.Signature
 
 - **알고리즘**: HMAC-SHA256
 - **키 관리**: Base64 인코딩된 비밀 키
-- **클레임**: subject, authorities, expiration
+- **클레임**: `sub`(이메일), `auth`(권한, 쉼표 구분), `typ`(`access`/`refresh`), `exp`
 
 #### 토큰 생명주기
 | 토큰 타입 | 유효 기간 | 저장 위치 | 용도 |
@@ -63,11 +63,32 @@ Authorization: Bearer <jwt_token>
 - 서명 검증 (HMAC-SHA256)
 - 만료 시간 확인
 - 형식 유효성 검사
+- typ == "access" 확인
 - 클레임 추출
 
 // 3. SecurityContext에 인증 정보 설정
 SecurityContextHolder.getContext().authentication = authentication
 ```
+
+#### 토큰 타입(typ) 클레임
+
+Access/Refresh 토큰은 같은 키로 서명되고 `sub`·`auth`도 같다. 예전에는 만료만 달라서, 7일짜리 Refresh 토큰을 `Authorization: Bearer`에 넣으면 이 서버와 NestJS 게시글 서비스(`vans_story_be_post`) 모두에서 Access 토큰으로 통과했다. 지금은 `JwtProvider`가 두 토큰에 `typ` 클레임을 넣고 받는 쪽이 확인한다.
+
+| 검증 위치 | `typ=access` | `typ=refresh` | `typ` 없음 (도입 전 발급분) |
+|-----------|--------------|---------------|------------------------------|
+| `JwtFilter` (모든 API) | 인증 | 인증 안 함 | 인증 안 함 |
+| `POST /api/v1/auth/refresh` | 거부 | 갱신 | **전환기 동안 갱신** |
+
+전환 정책 — Access는 즉시 엄격, Refresh만 유예:
+- **Access 자리(`JwtFilter`)는 `typ` 없는 토큰을 받지 않는다.** `typ` 없는 토큰은 옛 Access(최대 5시간)일 수도, 옛 Refresh(최대 7일)일 수도 있어 구분할 수 없다. 유예하면 옛 Refresh 토큰이 7일 동안 Access로 통과하는 지금의 문제가 그대로 남는다. 배포 시점에 로그인해 있던 사용자의 첫 요청은 401이 되고, 프런트(`apiFetch.authFetch`)가 `/auth/refresh`로 새 토큰을 받아 재시도한다.
+- **Refresh 자리는 `typ` 없는 토큰을 받는다** (`AuthService.validateAndGetAuthentication`의 `allowMissingType = true`). Refresh 경로는 JWT 검증 전에 토큰 해시가 `refresh_tokens` 테이블에 있는지 확인하므로, Access 토큰(DB에 저장되지 않음)이 이 유예로 통과할 수 없다. 갱신하면 토큰이 회전되어 `typ` 붙은 토큰으로 바뀐다. 결과: 강제 재로그인 없음.
+- **유예 종료**: 배포 + 7일(`VANS_BLOG_JWT_REFRESH_TOKEN_VALIDITY`)이 지나면 `typ` 없는 Refresh 토큰은 모두 만료된다. 그 뒤 `allowMissingType = true`를 지운다.
+- 프런트의 refresh 재시도가 실패하는 환경이면 기존 사용자는 한 번 다시 로그인하게 된다. 보안상 문제는 없다.
+
+배포 순서:
+1. 이 서버(Spring) 배포. 이 시점부터 새 토큰에는 모두 `typ`이 붙는다. 게시글 서비스는 `typ`을 보지 않으므로 영향 없음.
+2. 배포 + 5시간(`VANS_BLOG_JWT_ACCESS_TOKEN_VALIDITY`) 이후, 게시글 서비스 `JwtStrategy.validate`에 `typ !== 'access'` 거부를 배포 (`vans_story_be_post/TODO.md` 3절 보안). Spring보다 먼저 배포하면 모든 인증 요청이 401이 된다. 5시간을 기다리면 배포 전 발급된 Access 토큰이 모두 만료되어 기존 사용자도 401을 보지 않는다.
+3. 배포 + 7일 이후, 위 Refresh 유예(`allowMissingType = true`) 제거.
 
 #### 환경 변수 설정
 ```env
