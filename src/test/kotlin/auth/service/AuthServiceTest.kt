@@ -4,6 +4,7 @@ import auth.support.TestConstants
 import auth.support.TestDataBuilder
 import blog.vans_story_be.domain.auth.jwt.JwtProperties
 import blog.vans_story_be.domain.auth.jwt.JwtProvider
+import blog.vans_story_be.domain.auth.jwt.TokenType
 import blog.vans_story_be.domain.auth.repository.RefreshTokenRepository
 import blog.vans_story_be.domain.auth.service.AuthService
 import blog.vans_story_be.domain.user.entity.User
@@ -130,7 +131,7 @@ class AuthServiceTest : DescribeSpec({
             beforeEach {
                 setupUserMock()
                 every { mockRefreshTokenRepository.findUserIdByTokenHash(any()) } returns 1L
-                every { mockJwtProvider.validateToken(refreshToken) } returns true
+                every { mockJwtProvider.validateToken(refreshToken, TokenType.REFRESH, true) } returns true
                 every { mockJwtProvider.getAuthentication(refreshToken) } returns mockAuth
                 every { mockAuth.name } returns "test@example.com"
                 every { mockJwtProvider.generateAccessToken(mockAuth) } returns "new.access.token"
@@ -141,7 +142,7 @@ class AuthServiceTest : DescribeSpec({
                 authService.refresh(refreshToken, mockResponse)
 
                 verify {
-                    mockJwtProvider.validateToken(refreshToken)
+                    mockJwtProvider.validateToken(refreshToken, TokenType.REFRESH, true)
                     mockJwtProvider.getAuthentication(refreshToken)
                     mockJwtProvider.generateAccessToken(mockAuth)
                     mockJwtProvider.generateRefreshToken(mockAuth)
@@ -181,7 +182,7 @@ class AuthServiceTest : DescribeSpec({
 
             beforeEach {
                 every { mockRefreshTokenRepository.findUserIdByTokenHash(any()) } returns 1L
-                every { mockJwtProvider.validateToken(refreshToken) } returns false
+                every { mockJwtProvider.validateToken(refreshToken, TokenType.REFRESH, true) } returns false
             }
 
             it("CustomException을 던져야 한다") {
@@ -190,7 +191,7 @@ class AuthServiceTest : DescribeSpec({
                 }
 
                 exception.message shouldBe "토큰 갱신에 실패했습니다."
-                verify { mockJwtProvider.validateToken(refreshToken) }
+                verify { mockJwtProvider.validateToken(refreshToken, TokenType.REFRESH, true) }
             }
         }
     }

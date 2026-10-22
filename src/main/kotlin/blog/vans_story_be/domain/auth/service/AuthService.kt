@@ -4,6 +4,7 @@ import blog.vans_story_be.domain.auth.dto.LoginRequest
 import blog.vans_story_be.domain.auth.dto.toLogString
 import blog.vans_story_be.domain.auth.jwt.JwtProperties
 import blog.vans_story_be.domain.auth.jwt.JwtProvider
+import blog.vans_story_be.domain.auth.jwt.TokenType
 import blog.vans_story_be.domain.auth.repository.RefreshTokenRepository
 import blog.vans_story_be.domain.user.repository.UserRepository
 import blog.vans_story_be.global.exception.CustomException
@@ -122,8 +123,13 @@ class AuthService(
         return authenticationManager.authenticate(token)
     }
 
+    /**
+     * Refresh Token의 서명·만료·typ 검증.
+     * typ 없는 토큰은 typ 도입 전 발급분으로 보고 허용한다 — 호출 전에 DB 해시 확인을 통과했으므로
+     * Access Token이 섞여 들어올 수 없다. 배포 + Refresh 유효기간(7일)이 지나면 allowMissingType을 제거한다.
+     */
     private fun validateAndGetAuthentication(refreshToken: String): Authentication {
-        if (!jwtProvider.validateToken(refreshToken)) {
+        if (!jwtProvider.validateToken(refreshToken, TokenType.REFRESH, allowMissingType = true)) {
             throw CustomException("Refresh Token이 유효하지 않습니다.")
         }
         return jwtProvider.getAuthentication(refreshToken)
