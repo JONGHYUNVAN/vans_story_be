@@ -603,11 +603,11 @@ Authorization: Bearer <access_token>
 
 ### 4. 이메일로 닉네임 조회
 
-이메일을 통해 사용자의 닉네임을 조회합니다.
+이메일을 통해 사용자의 닉네임을 조회합니다. 내부 서비스 전용이며 `X-API-KEY`가 맞지 않으면 403입니다.
 
 ```http
 GET /api/v1/users/email/{email}
-Authorization: Bearer <access_token>
+X-API-KEY: <internal_api_key>
 ```
 
 #### 경로 매개변수

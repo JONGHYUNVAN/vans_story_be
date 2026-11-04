@@ -2,9 +2,11 @@ package blog.vans_story_be.config.security
 
 import blog.vans_story_be.domain.auth.jwt.JwtFilter
 import blog.vans_story_be.domain.auth.jwt.JwtProvider
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.env.Environment
+import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AuthenticationManager
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
@@ -21,7 +23,7 @@ import org.springframework.web.cors.CorsConfigurationSource
  *
  * - JWT 인증 필터 등록
  * - Rate Limit 필터 등록 (/login, /signup)
- * - 이메일 확인 API 인증 필요로 변경 (User Enumeration 방지)
+ * - 이메일로 닉네임 조회는 내부 서비스 키로만 허용 (User Enumeration 방지)
  * - Swagger: prod 프로파일에서 비활성화
  */
 @Configuration
@@ -30,7 +32,8 @@ class SecurityConfig(
     private val jwtProvider: JwtProvider,
     private val corsConfigurationSource: CorsConfigurationSource,
     private val loginRateLimiter: LoginRateLimiter,
-    private val environment: Environment
+    private val environment: Environment,
+    @param:Value("\${VANS_BLOG_INTERNAL_API_KEY}") private val internalApiKey: String
 ) {
     @Bean
     fun passwordEncoder(): PasswordEncoder = BCryptPasswordEncoder()
@@ -57,6 +60,8 @@ class SecurityConfig(
                         "/api/v1/auth/logout"
                     ).permitAll()
                     .requestMatchers("/api/v1/oauth/login", "/api/v1/oauth/exchange").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/v1/users/email/**")
+                    .access(InternalApiKeyAuthorizationManager(internalApiKey))
                     .requestMatchers("/error").permitAll()
                 if (!isProd) {
                     auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**").permitAll()
