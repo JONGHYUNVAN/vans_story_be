@@ -70,7 +70,8 @@ class JwtFilter(
 
         try {
             resolveToken(request)?.let { token ->
-                if (jwtProvider.validateToken(token)) {
+                // Refresh 토큰과 typ 없는 레거시 토큰은 인증하지 않는다 (SECURITY.md "토큰 타입(typ) 클레임")
+                if (jwtProvider.validateToken(token, TokenType.ACCESS)) {
                     val authentication = jwtProvider.getAuthentication(token)
                     SecurityContextHolder.getContext().authentication = authentication
                     log.debug { "JWT 토큰 인증 성공: ${authentication.name}" }
