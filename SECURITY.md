@@ -129,9 +129,6 @@ enum class Role {
 /api/v1/auth/refresh
 /api/v1/auth/logout
 
-// 공개 사용자 API
-/api/v1/users/email/**
-
 // 문서화 및 개발 도구
 /swagger-ui/**
 /v3/api-docs/**
